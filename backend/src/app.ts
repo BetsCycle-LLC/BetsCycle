@@ -1,0 +1,36 @@
+import cors from 'cors';
+import express from 'express';
+
+import { env } from './config/env';
+import { authRouter } from './routes/auth';
+
+export function createApp() {
+  const app = express();
+
+  app.use(
+    cors({
+      origin: env.clientOrigin,
+      credentials: true,
+    }),
+  );
+  app.use(express.json({ limit: '1mb' }));
+
+  app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok' });
+  });
+
+  app.use('/api/auth', authRouter);
+
+  app.use((req, res) => {
+    res.status(404).json({ message: `Route ${req.path} not found` });
+  });
+
+  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    // eslint-disable-next-line no-console
+    console.error(err);
+    res.status(500).json({ message: 'Unexpected server error' });
+  });
+
+  return app;
+}
+

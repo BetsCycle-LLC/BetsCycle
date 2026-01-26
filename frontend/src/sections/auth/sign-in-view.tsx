@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
@@ -10,33 +11,62 @@ import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
 
 import { useRouter } from 'src/routes/hooks';
+import { RouterLink } from 'src/routes/components';
 
 import { Iconify } from 'src/components/iconify';
+import { useAuth } from 'src/auth/use-auth';
 
 // ----------------------------------------------------------------------
 
 export function SignInView() {
   const router = useRouter();
+  const { loginUser } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSignIn = useCallback(() => {
-    router.push('/');
-  }, [router]);
+  const handleSignIn = useCallback(async () => {
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    try {
+      await loginUser({ email, password });
+      router.push('/');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to sign in';
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [email, loginUser, password, router]);
 
   const renderForm = (
     <Box
+      component="form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        handleSignIn();
+      }}
       sx={{
         display: 'flex',
         alignItems: 'flex-end',
         flexDirection: 'column',
       }}
     >
+      {errorMessage ? (
+        <Alert severity="error" sx={{ width: 1, mb: 3 }}>
+          {errorMessage}
+        </Alert>
+      ) : null}
       <TextField
         fullWidth
         name="email"
         label="Email address"
-        defaultValue="hello@gmail.com"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
         sx={{ mb: 3 }}
         slotProps={{
           inputLabel: { shrink: true },
@@ -51,7 +81,8 @@ export function SignInView() {
         fullWidth
         name="password"
         label="Password"
-        defaultValue="@demo1234"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
         type={showPassword ? 'text' : 'password'}
         slotProps={{
           inputLabel: { shrink: true },
@@ -74,9 +105,9 @@ export function SignInView() {
         type="submit"
         color="inherit"
         variant="contained"
-        onClick={handleSignIn}
+        disabled={isSubmitting}
       >
-        Sign in
+        {isSubmitting ? 'Signing in...' : 'Sign in'}
       </Button>
     </Box>
   );
@@ -100,7 +131,7 @@ export function SignInView() {
           }}
         >
           Don’t have an account?
-          <Link variant="subtitle2" sx={{ ml: 0.5 }}>
+          <Link component={RouterLink} to="/sign-up" variant="subtitle2" sx={{ ml: 0.5 }}>
             Get started
           </Link>
         </Typography>
