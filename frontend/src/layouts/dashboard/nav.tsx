@@ -243,10 +243,25 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
             <Box
               component="ul"
               sx={(theme) => ({
-                pl: 1.9,
+                pl: 1.5,
                 py: 0.5,
-                ml: 3.25,
-                borderLeft: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.24)}`,
+                ml: 3,
+                gap: 0.5,
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                '&::before': {  
+                  content: '""',
+                  position: 'absolute',
+                  left: -2,
+                  top: 0,
+                  // width: 4,
+                  bottom: 22,
+                  border: `2px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
+                  borderBottom: `none`,
+                  borderTop: `none`,
+                  borderRight: `none`,
+                },
               })}
             >
               {item.children.map((child) => {
@@ -261,7 +276,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                       sx={[
                         (theme) => ({
                           position: 'relative',
-                          pl: 2,
+                          pl: 1.5,
                           py: 0.6,
                           gap: 1.5,
                           pr: 1.5,
@@ -289,15 +304,21 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                           '&::before': {
                             content: '""',
                             position: 'absolute',
-                            left: -16,
+                            left: -12,
                             top: '50%',
-                            width: 2,
-                            height: 16,
-                            transform: 'translateY(-50%)',
-                            borderRadius: 999,
-                            backgroundColor: isChildActived
-                              ? theme.vars.palette.common.white
-                              : 'transparent',
+                            width: 12,
+                            height: 14,
+                            transform: 'translateY(-100%)',
+                            transformOrigin: 'center',
+                            borderRadius: 0,
+                            border: `2px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
+                            borderTop: `none`,
+                            borderRight: `none`,
+                            borderLeft: `none`,
+                            // borderBottom: `none`,
+                            // borderLeft: `none`,
+                            // borderRight: `none`,
+                            backgroundColor: 'transparent',
                           },
                           '&:hover': {
                             color: isChildActived
