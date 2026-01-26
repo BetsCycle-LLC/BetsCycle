@@ -274,6 +274,11 @@
   resolved "https://registry.npmjs.org/@fontsource-variable/dm-sans/-/dm-sans-5.2.5.tgz"
   integrity sha512-ynWdb1Ncn5ywUOE6OkTsvgjkiZKj+xM/GS2iVE47MBvS3AlfOSyOy3xynfkQsM3ngaxdCamT/06hZGAgPmao0A==
 
+"@fontsource-variable/public-sans@^5.2.7":
+  version "5.2.7"
+  resolved "https://registry.npmjs.org/@fontsource-variable/public-sans/-/public-sans-5.2.7.tgz"
+  integrity sha512-4mvade2J3slKkvwRkS+p8T3szet/0vhWoSnuUJTVU81Uo2pRpSZY/Y8bSLRqpSwzIPxjVmRJ53oq6JKP/l/PSg==
+
 "@fontsource/barlow@^5.2.5":
   version "5.2.5"
   resolved "https://registry.npmjs.org/@fontsource/barlow/-/barlow-5.2.5.tgz"

@@ -30,7 +30,7 @@ export const themeConfig: ThemeConfig = {
    * Typography
    *************************************** */
   fontFamily: {
-    primary: 'DM Sans Variable',
+    primary: 'Public Sans Variable',
     secondary: 'Barlow',
   },
   /** **************************************
@@ -38,11 +38,11 @@ export const themeConfig: ThemeConfig = {
    *************************************** */
   palette: {
     primary: {
-      lighter: '#D0ECFE',
-      light: '#73BAFB',
-      main: '#1877F2',
-      dark: '#0C44AE',
-      darker: '#042174',
+      lighter: '#C8FAD6',
+      light: '#5BE49B',
+      main: '#00A76F',
+      dark: '#007867',
+      darker: '#004B50',
       contrastText: '#FFFFFF',
     },
     secondary: {

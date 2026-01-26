@@ -1,9 +1,7 @@
 import { Label } from 'src/components/label';
-import { SvgColor } from 'src/components/svg-color';
+import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
-
-const icon = (name: string) => <SvgColor src={`/assets/icons/navbar/${name}.svg`} />;
 
 export type NavItem = {
   title: string;
@@ -14,38 +12,48 @@ export type NavItem = {
 
 export const navData = [
   {
-    title: 'Dashboard',
+    title: 'Home',
     path: '/',
-    icon: icon('ic-analytics'),
+    icon: <Iconify icon="solar:home-angle-bold-duotone" />,
   },
   {
-    title: 'User',
-    path: '/user',
-    icon: icon('ic-user'),
+    title: 'Originals',
+    path: '/originals',
+    icon: <Iconify icon="solar:restart-bold" />,
   },
   {
-    title: 'Product',
-    path: '/products',
-    icon: icon('ic-cart'),
+    title: 'Casino',
+    path: '/casino',
+    icon: <Iconify icon="solar:cart-3-bold" />,
+  },
+  {
+    title: 'Sports',
+    path: '/sports',
+    icon: <Iconify icon="solar:eye-bold" />,
+  },
+  {
+    title: 'Promotions',
+    path: '/promotions',
+    icon: <Iconify icon="solar:check-circle-bold" />,
     info: (
-      <Label color="error" variant="inverted">
-        +3
+      <Label color="success" variant="inverted">
+        New
       </Label>
     ),
   },
   {
-    title: 'Blog',
-    path: '/blog',
-    icon: icon('ic-blog'),
+    title: 'VIP',
+    path: '/vip',
+    icon: <Iconify icon="solar:shield-keyhole-bold-duotone" />,
   },
   {
-    title: 'Sign in',
-    path: '/sign-in',
-    icon: icon('ic-lock'),
+    title: 'Wallet',
+    path: '/wallet',
+    icon: <Iconify icon="solar:share-bold" />,
   },
   {
-    title: 'Not found',
-    path: '/404',
-    icon: icon('ic-disabled'),
+    title: 'Support',
+    path: '/support',
+    icon: <Iconify icon="solar:chat-round-dots-bold" />,
   },
 ];
