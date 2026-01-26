@@ -112,6 +112,305 @@ export function NavMobile({
 export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+
+  const sections = data.reduce<
+    Array<{
+      subheader?: Extract<NavItem, { type: 'subheader' }>;
+      items: Exclude<NavItem, { type: 'subheader' }>[];
+    }>
+  >((acc, item) => {
+    if (item.type === 'subheader') {
+      acc.push({ subheader: item, items: [] });
+      return acc;
+    }
+
+    if (!acc.length) {
+      acc.push({ items: [] });
+    }
+
+    acc[acc.length - 1].items.push(item);
+    return acc;
+  }, []);
+
+  const renderInfo = (info: React.ReactNode) => (
+    <Box
+      component="span"
+      sx={(theme) => ({
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: 24,
+        height: 20,
+        px: 0.75,
+        borderRadius: 999,
+        fontSize: 11,
+        fontWeight: 700,
+        lineHeight: 1,
+        color: theme.vars.palette.warning.main,
+        bgcolor: varAlpha(theme.vars.palette.warning.mainChannel, 0.18),
+      })}
+    >
+      {info}
+    </Box>
+  );
+
+  const renderNavItem = (item: Exclude<NavItem, { type: 'subheader' }>) => {
+    if (item.type === 'toggle') {
+      const isOpen = openGroups[item.title] ?? item.defaultOpen ?? true;
+      const isGroupActive = item.children.some((child) => child.path === pathname);
+
+      return (
+        <Box key={`toggle-${item.title}`} component="li" sx={{ listStyle: 'none' }}>
+          <ListItem disableGutters disablePadding>
+            <ListItemButton
+              disableGutters
+              onClick={() =>
+                setOpenGroups((prev) => ({
+                  ...prev,
+                  [item.title]: !isOpen,
+                }))
+              }
+              sx={[
+                (theme) => ({
+                  pl: 2,
+                  py: 0.75,
+                  gap: 1.5,
+                  pr: 1.5,
+                  borderRadius: 1,
+                  typography: 'body2',
+                  fontSize: 13,
+                  fontWeight: isGroupActive ? 'fontWeightSemiBold' : 'fontWeightMedium',
+                  color: isGroupActive
+                    ? theme.vars.palette.success.main
+                    : theme.vars.palette.text.secondary,
+                  bgcolor: isGroupActive
+                    ? varAlpha(theme.vars.palette.success.mainChannel, 0.16)
+                    : 'transparent',
+                  minHeight: 40,
+                  transition: theme.transitions.create(['background-color', 'color'], {
+                    duration: theme.transitions.duration.shortest,
+                  }),
+                  '& .nav-item-icon': {
+                    color: isGroupActive
+                      ? theme.vars.palette.success.main
+                      : theme.vars.palette.text.disabled,
+                  },
+                  '&:hover': {
+                    color: isGroupActive
+                      ? theme.vars.palette.success.main
+                      : theme.vars.palette.text.primary,
+                    bgcolor: isGroupActive
+                      ? varAlpha(theme.vars.palette.success.mainChannel, 0.24)
+                      : varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+                    '& .nav-item-icon': {
+                      color: isGroupActive
+                        ? theme.vars.palette.success.main
+                        : theme.vars.palette.text.primary,
+                    },
+                  },
+                }),
+              ]}
+            >
+              <Box
+                component="span"
+                className="nav-item-icon"
+                sx={{
+                  width: 22,
+                  height: 22,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {item.icon}
+              </Box>
+
+              <Box component="span" sx={{ flexGrow: 1 }}>
+                {item.title}
+              </Box>
+
+              <Iconify
+                icon={isOpen ? 'eva:arrow-ios-upward-fill' : 'eva:arrow-ios-downward-fill'}
+                width={16}
+                sx={{ color: 'inherit' }}
+              />
+            </ListItemButton>
+          </ListItem>
+
+          <Collapse in={isOpen} timeout="auto" unmountOnExit>
+            <Box
+              component="ul"
+              sx={(theme) => ({
+                pl: 2.75,
+                py: 0.5,
+                ml: 1,
+                borderLeft: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.24)}`,
+              })}
+            >
+              {item.children.map((child) => {
+                const isChildActived = child.path === pathname;
+
+                return (
+                  <ListItem disableGutters disablePadding key={child.title}>
+                    <ListItemButton
+                      disableGutters
+                      component={RouterLink}
+                      href={child.path}
+                      sx={[
+                        (theme) => ({
+                          position: 'relative',
+                          pl: 2,
+                          py: 0.6,
+                          gap: 1.5,
+                          pr: 1.5,
+                          borderRadius: 1,
+                          typography: 'body2',
+                          fontSize: 12.5,
+                          fontWeight: isChildActived
+                            ? 'fontWeightSemiBold'
+                            : 'fontWeightMedium',
+                          color: isChildActived
+                            ? theme.vars.palette.success.main
+                            : theme.vars.palette.text.secondary,
+                          bgcolor: isChildActived
+                            ? varAlpha(theme.vars.palette.success.mainChannel, 0.16)
+                            : 'transparent',
+                          minHeight: 36,
+                          transition: theme.transitions.create(['background-color', 'color'], {
+                            duration: theme.transitions.duration.shortest,
+                          }),
+                          '& .nav-item-icon': {
+                            color: isChildActived
+                              ? theme.vars.palette.success.main
+                              : theme.vars.palette.text.disabled,
+                          },
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            left: -16,
+                            top: '50%',
+                            width: 2,
+                            height: 16,
+                            transform: 'translateY(-50%)',
+                            borderRadius: 999,
+                            backgroundColor: isChildActived
+                              ? theme.vars.palette.common.white
+                              : 'transparent',
+                          },
+                          '&:hover': {
+                            color: isChildActived
+                              ? theme.vars.palette.success.main
+                              : theme.vars.palette.text.primary,
+                            bgcolor: isChildActived
+                              ? varAlpha(theme.vars.palette.success.mainChannel, 0.24)
+                              : varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+                            '& .nav-item-icon': {
+                              color: isChildActived
+                                ? theme.vars.palette.success.main
+                                : theme.vars.palette.text.primary,
+                            },
+                          },
+                        }),
+                      ]}
+                    >
+                      <Box
+                        component="span"
+                        className="nav-item-icon"
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {child.icon}
+                      </Box>
+
+                      <Box component="span" sx={{ flexGrow: 1 }}>
+                        {child.title}
+                      </Box>
+
+                      {child.info && renderInfo(child.info)}
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </Box>
+          </Collapse>
+        </Box>
+      );
+    }
+
+    const isActived = item.path === pathname;
+
+    return (
+      <ListItem disableGutters disablePadding key={item.title}>
+        <ListItemButton
+          disableGutters
+          component={RouterLink}
+          href={item.path}
+          sx={[
+            (theme) => ({
+              pl: 2,
+              py: 0.75,
+              gap: 1.5,
+              pr: 1.5,
+              borderRadius: 1,
+              typography: 'body2',
+              fontSize: 13,
+              fontWeight: isActived ? 'fontWeightSemiBold' : 'fontWeightMedium',
+              color: isActived ? theme.vars.palette.success.main : theme.vars.palette.text.secondary,
+              bgcolor: isActived
+                ? varAlpha(theme.vars.palette.success.mainChannel, 0.16)
+                : 'transparent',
+              minHeight: 40,
+              transition: theme.transitions.create(['background-color', 'color'], {
+                duration: theme.transitions.duration.shortest,
+              }),
+              '& .nav-item-icon': {
+                color: isActived
+                  ? theme.vars.palette.success.main
+                  : theme.vars.palette.text.disabled,
+              },
+              '&:hover': {
+                color: isActived ? theme.vars.palette.success.main : theme.vars.palette.text.primary,
+                bgcolor: isActived
+                  ? varAlpha(theme.vars.palette.success.mainChannel, 0.24)
+                  : varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+                '& .nav-item-icon': {
+                  color: isActived
+                    ? theme.vars.palette.success.main
+                    : theme.vars.palette.text.primary,
+                },
+              },
+            }),
+          ]}
+        >
+          <Box
+            component="span"
+            className="nav-item-icon"
+            sx={{
+              width: 22,
+              height: 22,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {item.icon}
+          </Box>
+
+          <Box component="span" sx={{ flexGrow: 1 }}>
+            {item.title}
+          </Box>
+
+          {item.info && renderInfo(item.info)}
+        </ListItemButton>
+      </ListItem>
+    );
+  };
 
   return (
     <>
@@ -141,187 +440,72 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
               flexDirection: 'column',
             }}
           >
-            {data.map((item) => {
-              if (item.type === 'subheader') {
-                return (
-                  <ListSubheader
-                    key={`subheader-${item.title}`}
-                    disableSticky
-                    component="li"
-                    sx={(theme) => ({
-                      mt: 1.75,
-                      px: 2,
-                      py: 0.5,
-                      listStyle: 'none',
-                      typography: 'overline',
-                      color: theme.vars.palette.text.disabled,
-                      letterSpacing: 0.8,
-                      textTransform: 'uppercase',
-                      position: 'relative',
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        left: 0,
-                        top: '50%',
-                        width: 10,
-                        height: 1,
-                        backgroundColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.32),
-                        transform: 'translateY(-50%)',
-                      },
-                    })}
-                  >
-                    {item.title}
-                  </ListSubheader>
-                );
-              }
-
-              if (item.type === 'toggle') {
-                const isOpen = openGroups[item.title] ?? item.defaultOpen ?? true;
-
-                return (
-                  <Box key={`toggle-${item.title}`} component="li" sx={{ listStyle: 'none' }}>
-                    <ListItem disableGutters disablePadding>
-                      <ListItemButton
-                        disableGutters
-                        onClick={() =>
-                          setOpenGroups((prev) => ({
-                            ...prev,
-                            [item.title]: !isOpen,
-                          }))
-                        }
-                        sx={[
-                          (theme) => ({
-                            pl: 2,
-                            py: 1,
-                            gap: 2,
-                            pr: 1.5,
-                            borderRadius: 0.75,
-                            typography: 'body2',
-                            fontWeight: 'fontWeightMedium',
-                            color: theme.vars.palette.text.secondary,
-                            minHeight: 44,
-                            '&:hover': {
-                              bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
-                            },
-                          }),
-                        ]}
-                      >
-                        <Box component="span" sx={{ width: 24, height: 24 }}>
-                          {item.icon}
-                        </Box>
-
-                        <Box component="span" sx={{ flexGrow: 1 }}>
-                          {item.title}
-                        </Box>
-
-                        <Iconify
-                          icon={
-                            isOpen ? 'eva:arrow-ios-upward-fill' : 'eva:arrow-ios-downward-fill'
-                          }
-                          width={18}
-                        />
-                      </ListItemButton>
-                    </ListItem>
-
-                    <Collapse in={isOpen} timeout="auto" unmountOnExit>
-                      <Box component="ul" sx={{ pl: 2.5, py: 0.5 }}>
-                        {item.children.map((child) => {
-                          const isChildActived = child.path === pathname;
-
-                          return (
-                            <ListItem disableGutters disablePadding key={child.title}>
-                              <ListItemButton
-                                disableGutters
-                                component={RouterLink}
-                                href={child.path}
-                                sx={[
-                                  (theme) => ({
-                                    pl: 2,
-                                    py: 0.75,
-                                    gap: 2,
-                                    pr: 1.5,
-                                    borderRadius: 0.75,
-                                    typography: 'body2',
-                                    fontWeight: 'fontWeightMedium',
-                                    color: theme.vars.palette.text.secondary,
-                                    minHeight: 40,
-                                    ...(isChildActived && {
-                                      fontWeight: 'fontWeightSemiBold',
-                                      color: theme.vars.palette.primary.main,
-                                      bgcolor: varAlpha(
-                                        theme.vars.palette.primary.mainChannel,
-                                        0.08
-                                      ),
-                                      '&:hover': {
-                                        bgcolor: varAlpha(
-                                          theme.vars.palette.primary.mainChannel,
-                                          0.16
-                                        ),
-                                      },
-                                    }),
-                                  }),
-                                ]}
-                              >
-                                <Box component="span" sx={{ width: 24, height: 24 }}>
-                                  {child.icon}
-                                </Box>
-
-                                <Box component="span" sx={{ flexGrow: 1 }}>
-                                  {child.title}
-                                </Box>
-
-                                {child.info && child.info}
-                              </ListItemButton>
-                            </ListItem>
-                          );
-                        })}
-                      </Box>
-                    </Collapse>
-                  </Box>
-                );
-              }
-
-              const isActived = item.path === pathname;
+            {sections.map((section, index) => {
+              const sectionKey = section.subheader?.title ?? `section-${index}`;
+              const isSectionOpen = openSections[sectionKey] ?? true;
 
               return (
-                <ListItem disableGutters disablePadding key={item.title}>
-                  <ListItemButton
-                    disableGutters
-                    component={RouterLink}
-                    href={item.path}
-                    sx={[
-                      (theme) => ({
-                        pl: 2,
-                        py: 1,
-                        gap: 2,
-                        pr: 1.5,
-                        borderRadius: 0.75,
-                        typography: 'body2',
-                        fontWeight: 'fontWeightMedium',
-                        color: theme.vars.palette.text.secondary,
-                        minHeight: 44,
-                        ...(isActived && {
-                          fontWeight: 'fontWeightSemiBold',
-                          color: theme.vars.palette.primary.main,
-                          bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
-                          '&:hover': {
-                            bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.16),
-                          },
+                <Box key={sectionKey} component="li" sx={{ listStyle: 'none' }}>
+                  {section.subheader && (
+                    <ListSubheader
+                      disableSticky
+                      component="div"
+                      onClick={() =>
+                        setOpenSections((prev) => ({
+                          ...prev,
+                          [sectionKey]: !isSectionOpen,
+                        }))
+                      }
+                      sx={(theme) => ({
+                        mt: 2,
+                        px: 2,
+                        py: 0.5,
+                        typography: 'overline',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: theme.vars.palette.text.disabled,
+                        letterSpacing: 0.7,
+                        textTransform: 'uppercase',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        transition: theme.transitions.create(['color'], {
+                          duration: theme.transitions.duration.shortest,
                         }),
-                      }),
-                    ]}
-                  >
-                    <Box component="span" sx={{ width: 24, height: 24 }}>
-                      {item.icon}
-                    </Box>
+                        '& .nav-subheader-arrow': {
+                          opacity: 0,
+                          transition: theme.transitions.create(['opacity', 'transform', 'color'], {
+                            duration: theme.transitions.duration.shortest,
+                          }),
+                          transform: isSectionOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+                          color: theme.vars.palette.text.disabled,
+                        },
+                        '&:hover': {
+                          color: theme.vars.palette.text.primary,
+                        },
+                        '&:hover .nav-subheader-arrow': {
+                          opacity: 1,
+                          color: theme.vars.palette.text.primary,
+                        },
+                      })}
+                    >
+                      <Iconify
+                        icon="eva:arrow-ios-downward-fill"
+                        width={16}
+                        className="nav-subheader-arrow"
+                      />
+                      {section.subheader.title}
+                    </ListSubheader>
+                  )}
 
-                    <Box component="span" sx={{ flexGrow: 1 }}>
-                      {item.title}
+                  <Collapse in={isSectionOpen} timeout="auto" unmountOnExit>
+                    <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, gap: 0.5 }}>
+                      {section.items.map((item) => renderNavItem(item))}
                     </Box>
-
-                    {item.info && item.info}
-                  </ListItemButton>
-                </ListItem>
+                  </Collapse>
+                </Box>
               );
             })}
           </Box>
