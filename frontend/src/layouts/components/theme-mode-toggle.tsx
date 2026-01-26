@@ -1,6 +1,8 @@
-import Switch from '@mui/material/Switch';
+import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import { useColorScheme } from '@mui/material/styles';
+
+import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
@@ -14,12 +16,20 @@ export function ThemeModeToggle() {
 
   return (
     <Tooltip title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
-      <Switch
+      <IconButton
         size="small"
-        checked={isDark}
-        onChange={handleToggle}
-        inputProps={{ 'aria-label': 'Toggle light/dark theme' }}
-      />
+        onClick={handleToggle}
+        aria-label="Toggle light/dark theme"
+        color="inherit"
+      >
+        <Iconify
+          icon={isDark ? 'custom:sun-bold' : 'custom:moon-bold'}
+          width={18}
+          sx={{
+            color: isDark ? 'warning.main' : 'text.primary',
+          }}
+        />
+      </IconButton>
     </Tooltip>
   );
 }

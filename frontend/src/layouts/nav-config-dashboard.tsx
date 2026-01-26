@@ -26,7 +26,7 @@ export type NavItem =
     });
 
 export const navData: NavItem[] = [
-  { type: 'subheader', title: 'Main Navigation' },
+  { type: 'subheader', title: 'Dashboard' },
   {
     type: 'toggle',
     title: 'Dashboard',
@@ -65,6 +65,7 @@ export const navData: NavItem[] = [
       },
     ],
   },
+  { type: 'subheader', title: 'Casino & Sports' },
   {
     type: 'toggle',
     title: 'Casino Games',
@@ -139,6 +140,7 @@ export const navData: NavItem[] = [
       },
     ],
   },
+  { type: 'subheader', title: 'Staking & Rewards' },
   {
     type: 'toggle',
     title: 'Staking',
@@ -231,6 +233,7 @@ export const navData: NavItem[] = [
       },
     ],
   },
+  { type: 'subheader', title: 'Transactions & Wallet' },
   {
     type: 'toggle',
     title: 'Transaction History',
@@ -299,6 +302,7 @@ export const navData: NavItem[] = [
       },
     ],
   },
+  { type: 'subheader', title: 'Account & Support' },
   {
     type: 'toggle',
     title: 'Account Settings',
