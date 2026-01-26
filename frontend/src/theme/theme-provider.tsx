@@ -23,7 +23,7 @@ export function ThemeProvider({ themeOverrides, children, ...other }: ThemeProvi
     <ThemeVarsProvider
       disableTransitionOnChange
       theme={theme}
-      defaultMode="light"
+      defaultMode="dark"
       modeStorageKey="betcycle-mode"
       {...other}
     >

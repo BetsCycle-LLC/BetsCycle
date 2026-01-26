@@ -47,8 +47,6 @@ export function NavDesktop({
   return (
     <Box
       sx={{
-        pt: 2.5,
-        px: 2.5,
         top: 0,
         left: 0,
         height: 1,
@@ -57,7 +55,8 @@ export function NavDesktop({
         flexDirection: 'column',
         zIndex: 'var(--layout-nav-zIndex)',
         width: 'var(--layout-nav-vertical-width)',
-        borderRight: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+        bgcolor: 'var(--layout-nav-bg)',
+        borderRight: '1px solid var(--layout-nav-border-color)',
         [theme.breakpoints.up(layoutQuery)]: {
           display: 'flex',
         },
@@ -98,6 +97,8 @@ export function NavMobile({
           px: 2.5,
           overflow: 'unset',
           width: 'var(--layout-nav-mobile-width)',
+          bgcolor: 'var(--layout-nav-bg)',
+          borderRight: '1px solid var(--layout-nav-border-color)',
           ...sx,
         },
       }}
@@ -173,10 +174,9 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
               }
               sx={[
                 (theme) => ({
-                  pl: 2,
-                  py: 0.75,
-                  gap: 1.5,
-                  pr: 1.5,
+                  pl: 1.5,
+                  py: 0.5,
+                  pr: 1,
                   borderRadius: 1,
                   typography: 'body2',
                   fontSize: 13,
@@ -187,7 +187,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                   bgcolor: isGroupActive
                     ? varAlpha(theme.vars.palette.success.mainChannel, 0.16)
                     : 'transparent',
-                  minHeight: 40,
+                  height: 44,
                   transition: theme.transitions.create(['background-color', 'color'], {
                     duration: theme.transitions.duration.shortest,
                   }),
@@ -216,9 +216,10 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                 component="span"
                 className="nav-item-icon"
                 sx={{
-                  width: 22,
-                  height: 22,
-                  display: 'inline-flex',
+                  width: 24,
+                  height: 24,
+                  mr: 1.5,
+                  display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
@@ -226,7 +227,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                 {item.icon}
               </Box>
 
-              <Box component="span" sx={{ flexGrow: 1 }}>
+              <Box component="span" sx={{ flexGrow: 1, fontSize: 14 }}>
                 {item.title}
               </Box>
 
@@ -242,9 +243,9 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
             <Box
               component="ul"
               sx={(theme) => ({
-                pl: 2.75,
+                pl: 1.9,
                 py: 0.5,
-                ml: 1,
+                ml: 3.25,
                 borderLeft: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.24)}`,
               })}
             >
@@ -414,11 +415,13 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
 
   return (
     <>
-      <Logo />
+      <Box sx={{ pl: 3.5, pt: 2.5, pb: 1 }}>
+        <Logo />
+      </Box>
 
       {slots?.topArea}
 
-      <WorkspacesPopover data={workspaces} sx={{ my: 2 }} />
+      {/* <WorkspacesPopover data={workspaces} sx={{ my: 2 }} /> */}
 
       <Scrollbar fillContent>
         <Box
@@ -436,6 +439,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
             component="ul"
             sx={{
               gap: 0.5,
+              px: 2,
               display: 'flex',
               flexDirection: 'column',
             }}
@@ -457,9 +461,11 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                         }))
                       }
                       sx={(theme) => ({
-                        mt: 2,
-                        px: 2,
-                        py: 0.5,
+                        ml: -0.5,
+                        pl: 0,
+                        pr: 1,
+                        pt: 2,
+                        pb: 1,
                         typography: 'overline',
                         fontSize: 11,
                         fontWeight: 700,
@@ -468,17 +474,12 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                         textTransform: 'uppercase',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 0.75,
                         cursor: 'pointer',
                         userSelect: 'none',
-                        transition: theme.transitions.create(['color'], {
-                          duration: theme.transitions.duration.shortest,
-                        }),
+                        transition: '.3s ease-in-out all',
                         '& .nav-subheader-arrow': {
                           opacity: 0,
-                          transition: theme.transitions.create(['opacity', 'transform', 'color'], {
-                            duration: theme.transitions.duration.shortest,
-                          }),
+                          transition: '.3s ease-in-out all',
                           transform: isSectionOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
                           color: theme.vars.palette.text.disabled,
                         },
@@ -487,6 +488,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                         },
                         '&:hover .nav-subheader-arrow': {
                           opacity: 1,
+                          mr: 0.75,
                           color: theme.vars.palette.text.primary,
                         },
                       })}

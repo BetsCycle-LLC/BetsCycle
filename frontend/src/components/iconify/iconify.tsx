@@ -18,7 +18,7 @@ export type IconifyProps = React.ComponentProps<typeof IconRoot> &
     icon: IconifyName;
   };
 
-export function Iconify({ className, icon, width = 20, height, sx, ...other }: IconifyProps) {
+export function Iconify({ className, icon, width = 22, height, sx, ...other }: IconifyProps) {
   const id = useId();
 
   if (!allIconNames.includes(icon)) {

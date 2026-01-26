@@ -14,7 +14,7 @@ import type { ThemeOptions } from './types';
 // ----------------------------------------------------------------------
 
 export const baseTheme: ThemeOptions = {
-  defaultColorScheme: 'light',
+  defaultColorScheme: 'dark',
   colorSchemes: {
     light: {
       palette: palette.light,

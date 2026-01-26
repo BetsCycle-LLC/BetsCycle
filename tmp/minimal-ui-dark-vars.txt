@@ -1,0 +1,3 @@
+--layout-nav-border-color:rgba(var(--palette-grey-500Channel)/8%)
+--layout-nav-horizontal-bg:rgba(var(--palette-background-defaultChannel)/96%)
+--indicator-bg:var(--palette-grey-900)
