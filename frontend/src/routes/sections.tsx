@@ -12,11 +12,17 @@ import { DashboardLayout } from 'src/layouts/dashboard';
 
 // ----------------------------------------------------------------------
 
+export const HomePage = lazy(() => import('src/pages/home'));
 export const DashboardPage = lazy(() => import('src/pages/dashboard'));
-export const BlogPage = lazy(() => import('src/pages/blog'));
+export const OriginalsPage = lazy(() => import('src/pages/originals'));
+export const CasinoPage = lazy(() => import('src/pages/casino'));
+export const SportsPage = lazy(() => import('src/pages/sports'));
+export const PromotionsPage = lazy(() => import('src/pages/promotions'));
+export const VipPage = lazy(() => import('src/pages/vip'));
+export const WalletPage = lazy(() => import('src/pages/wallet'));
+export const SupportPage = lazy(() => import('src/pages/support'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
-export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 const renderFallback = () => (
@@ -49,10 +55,16 @@ export const routesSection: RouteObject[] = [
       </DashboardLayout>
     ),
     children: [
-      { index: true, element: <DashboardPage /> },
+      { index: true, element: <HomePage /> },
+      { path: 'dashboard', element: <DashboardPage /> },
+      { path: 'originals', element: <OriginalsPage /> },
+      { path: 'casino', element: <CasinoPage /> },
+      { path: 'sports', element: <SportsPage /> },
+      { path: 'promotions', element: <PromotionsPage /> },
+      { path: 'vip', element: <VipPage /> },
+      { path: 'wallet', element: <WalletPage /> },
+      { path: 'support', element: <SupportPage /> },
       { path: 'user', element: <UserPage /> },
-      { path: 'products', element: <ProductsPage /> },
-      { path: 'blog', element: <BlogPage /> },
     ],
   },
   {
