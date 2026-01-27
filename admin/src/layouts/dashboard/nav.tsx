@@ -18,6 +18,7 @@ import { Iconify } from 'src/components/iconify';
 import { Logo } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useAuth } from 'src/auth/use-auth';
+import { useRouter } from 'src/routes/hooks';
 
 import { WorkspacesPopover } from '../components/workspaces-popover';
 
@@ -113,9 +114,10 @@ export function NavMobile({
 
 export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
-  const { user, openAuthDialog, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const sections = data.reduce<
     Array<{
@@ -164,12 +166,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
 
       const handleAction = () => {
         if (item.action === 'sign-in') {
-          openAuthDialog('sign-in');
-          return;
-        }
-
-        if (item.action === 'sign-up') {
-          openAuthDialog('sign-up');
+          router.push('/sign-in');
           return;
         }
 
@@ -178,7 +175,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
           return;
         }
 
-        openAuthDialog('sign-in');
+        router.push('/sign-in');
       };
 
       return (

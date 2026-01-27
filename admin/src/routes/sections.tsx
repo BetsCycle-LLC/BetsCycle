@@ -2,12 +2,14 @@ import type { RouteObject } from 'react-router';
 
 import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router';
 import { varAlpha } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
 import { DashboardLayout } from 'src/layouts/dashboard';
+import { useAuth } from 'src/auth/use-auth';
 
 // ----------------------------------------------------------------------
 
@@ -21,6 +23,7 @@ export const VipPage = lazy(() => import('src/pages/vip'));
 export const WalletPage = lazy(() => import('src/pages/wallet'));
 export const SupportPage = lazy(() => import('src/pages/support'));
 export const UserPage = lazy(() => import('src/pages/user'));
+export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 const renderFallback = () => (
@@ -46,11 +49,13 @@ const renderFallback = () => (
 export const routesSection: RouteObject[] = [
   {
     element: (
-      <DashboardLayout>
-        <Suspense fallback={renderFallback()}>
-          <Outlet />
-        </Suspense>
-      </DashboardLayout>
+      <AuthGuard>
+        <DashboardLayout>
+          <Suspense fallback={renderFallback()}>
+            <Outlet />
+          </Suspense>
+        </DashboardLayout>
+      </AuthGuard>
     ),
     children: [
       { index: true, element: <HomePage /> },
@@ -65,10 +70,34 @@ export const routesSection: RouteObject[] = [
       { path: 'user', element: <UserPage /> },
     ],
   },
-  // Auth is handled via modal instead of routes.
+  {
+    path: 'sign-in',
+    element: (
+      <Suspense fallback={renderFallback()}>
+        <SignInPage />
+      </Suspense>
+    ),
+  },
   {
     path: '404',
     element: <Page404 />,
   },
   { path: '*', element: <Page404 /> },
 ];
+
+// ----------------------------------------------------------------------
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { user, isReady } = useAuth();
+  const { pathname } = useLocation();
+
+  if (!isReady) {
+    return renderFallback();
+  }
+
+  if (!user) {
+    return <Navigate to="/sign-in" replace state={{ from: pathname }} />;
+  }
+
+  return <>{children}</>;
+}

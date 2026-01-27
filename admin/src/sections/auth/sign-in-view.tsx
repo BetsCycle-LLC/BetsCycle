@@ -2,9 +2,7 @@ import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
-import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -20,7 +18,7 @@ import { useSnackbar } from 'notistack';
 
 export function SignInView() {
   const router = useRouter();
-  const { loginUser, openAuthDialog, closeAuthDialog } = useAuth();
+  const { loginUser } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -37,14 +35,13 @@ export function SignInView() {
       await loginUser({ email, password });
       enqueueSnackbar('Signed in successfully.', { variant: 'success' });
       router.push('/');
-      closeAuthDialog();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to sign in';
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
     }
-  }, [closeAuthDialog, email, enqueueSnackbar, loginUser, password, router]);
+  }, [email, enqueueSnackbar, loginUser, password, router]);
 
   const renderForm = (
     <Box
@@ -124,35 +121,6 @@ export function SignInView() {
         <Typography variant="h5">Sign in</Typography>
       </Box>
       {renderForm}
-      <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
-        <Typography
-          variant="overline"
-          sx={{ color: 'text.secondary', fontWeight: 'fontWeightMedium' }}
-        >
-          OR
-        </Typography>
-      </Divider>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', width: 1 }}>
-        <Link variant="body2" color="inherit" sx={{ mb: 1.5 }}>
-          Forgot password?
-        </Link>
-        <Typography
-          variant="body2"
-          sx={{
-            color: 'text.secondary',
-          }}
-        >
-          Don’t have an account?
-          <Link
-            component="button"
-            variant="subtitle2"
-            sx={{ ml: 0.5 }}
-            onClick={() => openAuthDialog('sign-up')}
-          >
-            Get started
-          </Link>
-        </Typography>
-      </Box>
     </>
   );
 }

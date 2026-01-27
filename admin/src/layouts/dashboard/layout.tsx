@@ -57,7 +57,7 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const theme = useTheme();
   const pathname = usePathname();
-  const { user, openAuthDialog } = useAuth();
+  const { user } = useAuth();
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
@@ -147,24 +147,9 @@ export function DashboardLayout({
             /** @slot Account drawer */
             <AccountPopover data={_account} />
           ) : (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Button
-                size="small"
-                color="inherit"
-                variant="outlined"
-                onClick={() => openAuthDialog('sign-in')}
-              >
-                Sign in
-              </Button>
-              <Button
-                size="small"
-                color="inherit"
-                variant="contained"
-                onClick={() => openAuthDialog('sign-up')}
-              >
-                Sign up
-              </Button>
-            </Box>
+            <Button size="small" color="inherit" variant="outlined" component={RouterLink} href="/sign-in">
+              Sign in
+            </Button>
           )}
         </Box>
       ),

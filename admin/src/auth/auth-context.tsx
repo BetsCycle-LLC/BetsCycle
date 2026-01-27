@@ -1,27 +1,14 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 
-import type {
-  AuthResponse,
-  AuthUser,
-  LoginPayload,
-  RegisterPayload,
-  RegisterResponse,
-} from 'src/services/auth-api';
-import { fetchProfile, login, register } from 'src/services/auth-api';
+import type { AuthResponse, AuthUser, LoginPayload } from 'src/services/auth-api';
+import { fetchProfile, login } from 'src/services/auth-api';
 
 type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   isReady: boolean;
-  authDialog: {
-    open: boolean;
-    mode: 'sign-in' | 'sign-up';
-  };
   loginUser: (payload: LoginPayload) => Promise<AuthResponse>;
-  registerUser: (payload: RegisterPayload) => Promise<RegisterResponse>;
   logout: () => void;
-  openAuthDialog: (mode: 'sign-in' | 'sign-up') => void;
-  closeAuthDialog: () => void;
 };
 
 type StoredAuth = {
@@ -57,11 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [authDialog, setAuthDialog] = useState<AuthContextValue['authDialog']>({
-    open: false,
-    mode: 'sign-in',
-  });
-
   const setAuth = useCallback((nextToken: string, nextUser: AuthUser) => {
     setToken(nextToken);
     setUser(nextUser);
@@ -74,26 +56,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearStoredAuth();
   }, []);
 
-  const openAuthDialog = useCallback((mode: 'sign-in' | 'sign-up') => {
-    setAuthDialog({ open: true, mode });
-  }, []);
-
-  const closeAuthDialog = useCallback(() => {
-    setAuthDialog((prev) => ({ ...prev, open: false }));
-  }, []);
-
   const loginUser = useCallback(
     async (payload: LoginPayload) => {
       const result = await login(payload);
-      setAuth(result.token, result.player);
+      setAuth(result.token, result.admin);
       return result;
     },
     [setAuth],
   );
-
-  const registerUser = useCallback(async (payload: RegisterPayload) => {
-    return register(payload);
-  }, []);
 
   useEffect(() => {
     const stored = readStoredAuth();
@@ -107,8 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     fetchProfile(stored.token)
       .then((response) => {
-        setUser(response.player);
-        writeStoredAuth({ token: stored.token, user: response.player });
+        setUser(response.admin);
+        writeStoredAuth({ token: stored.token, user: response.admin });
       })
       .catch(() => {
         logout();
@@ -121,14 +91,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       token,
       isReady,
-      authDialog,
       loginUser,
-      registerUser,
       logout,
-      openAuthDialog,
-      closeAuthDialog,
     }),
-    [user, token, isReady, authDialog, loginUser, registerUser, logout, openAuthDialog, closeAuthDialog],
+    [user, token, isReady, loginUser, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

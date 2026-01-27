@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 
 import { usePathname } from 'src/routes/hooks';
 
-import { AuthModal } from 'src/auth/auth-modal';
 
 // ----------------------------------------------------------------------
 
@@ -18,7 +17,6 @@ export default function App({ children }: AppProps) {
   return (
     <>
       {children}
-      <AuthModal />
     </>
   );
 }

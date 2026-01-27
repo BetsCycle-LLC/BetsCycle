@@ -15,7 +15,7 @@ type NavItemLink = NavItemBase & {
 
 type NavItemAction = NavItemBase & {
   type: 'action';
-  action: 'sign-in' | 'sign-up' | 'logout';
+  action: 'sign-in' | 'logout';
   icon: React.ReactNode;
   info?: React.ReactNode;
 };

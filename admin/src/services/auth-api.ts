@@ -2,37 +2,17 @@ export type AuthUser = {
   id: string;
   username: string;
   email: string;
-  registrationDate?: string;
   status?: string;
-  avatar?: string;
-  playerType?: 'normal' | 'staking';
-  personalInfo?: {
-    firstName?: string;
-    lastName?: string;
-    dateOfBirth?: string;
-    phoneNumber?: string;
-    country?: string;
-  };
 };
 
 export type AuthResponse = {
   token: string;
-  player: AuthUser;
-};
-
-export type RegisterResponse = {
-  player: AuthUser;
+  admin: AuthUser;
 };
 
 export type LoginPayload = {
   email?: string;
   username?: string;
-  password: string;
-};
-
-export type RegisterPayload = {
-  username: string;
-  email: string;
   password: string;
 };
 
@@ -64,53 +44,17 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export function login(payload: LoginPayload) {
-  return request<AuthResponse>('/api/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export function register(payload: RegisterPayload) {
-  return request<RegisterResponse>('/api/auth/register', {
+  return request<AuthResponse>('/api/admin/auth/login', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
 export function fetchProfile(token: string) {
-  return request<{ player: AuthUser }>('/api/auth/me', {
+  return request<{ admin: AuthUser }>('/api/admin/auth/me', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  });
-}
-
-export function verifyEmail(payload: { email: string; code: string }) {
-  return request<{ player: AuthUser }>('/api/auth/verify-email', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export function updateProfile(
-  token: string,
-  payload: {  
-    avatar?: string;
-    personalInfo?: {
-      firstName?: string;
-      lastName?: string;
-      dateOfBirth?: string;
-      phoneNumber?: string;
-      country?: string;
-    };
-  },
-) {
-  return request<{ player: AuthUser }>('/api/auth/profile', {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
   });
 }
 
