@@ -3,6 +3,7 @@ import express from 'express';
 
 import { env } from './config/env';
 import { authRouter } from './routes/auth';
+import { adminAuthRouter } from './routes/admin-auth';
 
 export function createApp() {
   const app = express();
@@ -40,6 +41,7 @@ export function createApp() {
   });
 
   app.use('/api/auth', authRouter);
+  app.use('/api/admin/auth', adminAuthRouter);
 
   app.use((req, res) => {
     res.status(404).json({ message: `Route ${req.path} not found` });
