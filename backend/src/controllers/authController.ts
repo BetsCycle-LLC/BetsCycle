@@ -167,3 +167,37 @@ export async function verifyEmail(req: Request, res: Response) {
   return res.json({ player: sanitizePlayer(player) });
 }
 
+export async function updateProfile(req: Request, res: Response) {
+  const playerId = req.user?.id;
+
+  if (!playerId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const { avatar, personalInfo } = req.body ?? {};
+
+  const updates: Record<string, unknown> = {};
+
+  if (avatar !== undefined) {
+    updates.avatar = avatar;
+  }
+
+  if (personalInfo) {
+    updates.personalInfo = {
+      firstName: personalInfo.firstName,
+      lastName: personalInfo.lastName,
+      dateOfBirth: personalInfo.dateOfBirth ? new Date(personalInfo.dateOfBirth) : undefined,
+      phoneNumber: personalInfo.phoneNumber,
+      country: personalInfo.country,
+    };
+  }
+
+  const player = await Player.findByIdAndUpdate(playerId, updates, { new: true });
+
+  if (!player) {
+    return res.status(404).json({ message: 'Player not found' });
+  }
+
+  return res.json({ player: sanitizePlayer(player) });
+}
+

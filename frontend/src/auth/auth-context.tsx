@@ -1,6 +1,12 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { AuthUser, LoginPayload, RegisterPayload, RegisterResponse } from 'src/services/auth-api';
+import type {
+  AuthResponse,
+  AuthUser,
+  LoginPayload,
+  RegisterPayload,
+  RegisterResponse,
+} from 'src/services/auth-api';
 import { fetchProfile, login, register } from 'src/services/auth-api';
 
 type AuthContextValue = {
@@ -11,7 +17,7 @@ type AuthContextValue = {
     open: boolean;
     mode: 'sign-in' | 'sign-up';
   };
-  loginUser: (payload: LoginPayload) => Promise<void>;
+  loginUser: (payload: LoginPayload) => Promise<AuthResponse>;
   registerUser: (payload: RegisterPayload) => Promise<RegisterResponse>;
   logout: () => void;
   openAuthDialog: (mode: 'sign-in' | 'sign-up') => void;
@@ -76,10 +82,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthDialog((prev) => ({ ...prev, open: false }));
   }, []);
 
-  const loginUser = useCallback(async (payload: LoginPayload) => {
-    const result = await login(payload);
-    setAuth(result.token, result.player);
-  }, [setAuth]);
+  const loginUser = useCallback(
+    async (payload: LoginPayload) => {
+      const result = await login(payload);
+      setAuth(result.token, result.player);
+      return result;
+    },
+    [setAuth],
+  );
 
   const registerUser = useCallback(async (payload: RegisterPayload) => {
     return register(payload);

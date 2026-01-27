@@ -1,7 +1,11 @@
 import { useRef, useState, useCallback } from 'react';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
+import Avatar from '@mui/material/Avatar';
+import Autocomplete from '@mui/material/Autocomplete';
 import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -9,12 +13,15 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { useRouter } from 'src/routes/hooks';
 
 import { Iconify } from 'src/components/iconify';
 import { useAuth } from 'src/auth/use-auth';
-import { verifyEmail } from 'src/services/auth-api';
+import { updateProfile, verifyEmail } from 'src/services/auth-api';
 import { Divider } from '@mui/material';
 import { useSnackbar } from 'notistack';
 
@@ -35,6 +42,14 @@ export function SignUpView() {
   const [verificationPending, setVerificationPending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState('');
+  const [profileStep, setProfileStep] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState<Dayjs | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [country, setCountry] = useState<string | null>(null);
+  const [isFinishing, setIsFinishing] = useState(false);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const handleSignUp = useCallback(async () => {
@@ -42,6 +57,7 @@ export function SignUpView() {
     setIsSubmitting(true);
     setVerificationMessage('');
     setVerificationPending(false);
+    setProfileStep(false);
 
     try {
       if (password !== confirmPassword) {
@@ -70,16 +86,77 @@ export function SignUpView() {
     try {
       await verifyEmail({ email, code: verificationCode });
       enqueueSnackbar('Email verified successfully.', { variant: 'success' });
-      await loginUser({ email, password });
-      router.push('/');
-      closeAuthDialog();
+      setVerificationPending(false);
+      setProfileStep(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to verify email';
       setErrorMessage(message);
     } finally {
       setIsVerifying(false);
     }
-  }, [closeAuthDialog, email, enqueueSnackbar, loginUser, password, router, verificationCode]);
+  }, [email, enqueueSnackbar, verificationCode]);
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result;
+      if (typeof result === 'string') {
+        setAvatarPreview(result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFinishProfile = useCallback(async () => {
+    setErrorMessage('');
+    setIsFinishing(true);
+
+    try {
+      if (!firstName || !lastName || !dateOfBirth || !country) {
+        setErrorMessage('Please complete all required profile fields.');
+        return;
+      }
+
+      const auth = await loginUser({ email, password });
+
+      await updateProfile(auth.token, {
+        avatar: avatarPreview || undefined,
+        personalInfo: {
+          firstName,
+          lastName,
+          dateOfBirth: dateOfBirth ? dayjs(dateOfBirth).toDate().toISOString() : undefined,
+          phoneNumber: phoneNumber || undefined,
+          country,
+        },
+      });
+
+      enqueueSnackbar('Profile updated successfully.', { variant: 'success' });
+      router.push('/');
+      closeAuthDialog();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to finish profile';
+      setErrorMessage(message);
+    } finally {
+      setIsFinishing(false);
+    }
+  }, [
+    avatarPreview,
+    closeAuthDialog,
+    country,
+    dateOfBirth,
+    email,
+    firstName,
+    lastName,
+    loginUser,
+    password,
+    phoneNumber,
+    router,
+  ]);
 
   const otpValues = Array.from({ length: 6 }, (_, index) => verificationCode[index] ?? '');
 
@@ -148,96 +225,98 @@ export function SignUpView() {
             {errorMessage}
           </Alert>
         ) : null}
-        <Stack spacing={3} sx={{ width: 1 }}>
-          <TextField
-            fullWidth
-            name="username"
-            label="Username"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            slotProps={{
-              inputLabel: { shrink: true },
-            }}
-            disabled={verificationPending}
-          />
-          <TextField
-            fullWidth
-            name="email"
-            label="Email address"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            slotProps={{
-              inputLabel: { shrink: true },
-            }}
-            disabled={verificationPending}
-          />
-          <TextField
-            fullWidth
-            name="password"
-            label="Password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            type={showPassword ? 'text' : 'password'}
-            slotProps={{
-              inputLabel: { shrink: true },
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                      <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              },
-            }}
-            disabled={verificationPending}
-          />
-          <TextField
-            fullWidth
-            name="confirmPassword"
-            label="Confirm password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            type={showConfirmPassword ? 'text' : 'password'}
-            slotProps={{
-              inputLabel: { shrink: true },
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      edge="end"
-                    >
-                      <Iconify
-                        icon={showConfirmPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
-                      />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              },
-            }}
-            disabled={verificationPending}
-            error={!!confirmPassword && confirmPassword !== password}
-            helperText={
-              confirmPassword && confirmPassword !== password ? 'Passwords do not match.' : ' '
-            }
-          />
-          <Button
-            fullWidth
-            size="large"
-            type="submit"
-            variant="contained"
-            disabled={isSubmitting || verificationPending}
-          >
-            {isSubmitting ? 'Creating account...' : 'Create account'}
-          </Button>
-        </Stack>
-        {verificationMessage ? (
+        {!profileStep ? (
+          <Stack spacing={3} sx={{ width: 1 }}>
+            <TextField
+              fullWidth
+              name="username"
+              label="Username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              slotProps={{
+                inputLabel: { shrink: true },
+              }}
+              disabled={verificationPending}
+            />
+            <TextField
+              fullWidth
+              name="email"
+              label="Email address"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              slotProps={{
+                inputLabel: { shrink: true },
+              }}
+              disabled={verificationPending}
+            />
+            <TextField
+              fullWidth
+              name="password"
+              label="Password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              type={showPassword ? 'text' : 'password'}
+              slotProps={{
+                inputLabel: { shrink: true },
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                        <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              disabled={verificationPending}
+            />
+            <TextField
+              fullWidth
+              name="confirmPassword"
+              label="Confirm password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              type={showConfirmPassword ? 'text' : 'password'}
+              slotProps={{
+                inputLabel: { shrink: true },
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        edge="end"
+                      >
+                        <Iconify
+                          icon={showConfirmPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                        />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              disabled={verificationPending}
+              error={!!confirmPassword && confirmPassword !== password}
+              helperText={
+                confirmPassword && confirmPassword !== password ? 'Passwords do not match.' : ' '
+              }
+            />
+            <Button
+              fullWidth
+              size="large"
+              type="submit"
+              variant="contained"
+              disabled={isSubmitting || verificationPending}
+            >
+              {isSubmitting ? 'Creating account...' : 'Create account'}
+            </Button>
+          </Stack>
+        ) : null}
+        {verificationMessage && !profileStep ? (
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 3 }}>
             {verificationMessage}
           </Typography>
         ) : null}
-        {verificationPending ? (
+        {verificationPending && !profileStep ? (
           <Stack spacing={2} sx={{ width: 1, mt: 2 }} onPaste={handleOtpPaste}>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 1.5 }}>
               {otpValues.map((value, index) => (
@@ -268,6 +347,279 @@ export function SignUpView() {
               onClick={handleVerifyEmail}
             >
               {isVerifying ? 'Verifying...' : 'Verify email'}
+            </Button>
+          </Stack>
+        ) : null}
+        {profileStep ? (
+          <Stack spacing={3} sx={{ width: 1, mt: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar src={avatarPreview} sx={{ width: 64, height: 64 }} />
+              <Button component="label" variant="outlined" color="inherit">
+                Upload avatar
+                <input hidden accept="image/*" type="file" onChange={handleAvatarChange} />
+              </Button>
+            </Box>
+            <Box
+              sx={{
+                width: 1,
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+              }}
+            >
+              <TextField
+                fullWidth
+                name="firstName"
+                label="First name"
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+              />
+              <TextField
+                fullWidth
+                name="lastName"
+                label="Last name"
+                value={lastName}
+                onChange={(event) => setLastName(event.target.value)}
+              />
+            </Box>
+            <Box
+              sx={{
+                width: 1,
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+              }}
+            >
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="Date of birth"
+                  value={dateOfBirth}
+                  onChange={(value: Dayjs | null) => setDateOfBirth(value)}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      name: 'dateOfBirth',
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+              <TextField
+                fullWidth
+                name="phoneNumber"
+                label="Phone number"
+                value={phoneNumber}
+                onChange={(event) => setPhoneNumber(event.target.value)}
+              />
+            </Box>
+            <Autocomplete
+              options={[
+                'Afghanistan',
+                'Albania',
+                'Algeria',
+                'Andorra',
+                'Angola',
+                'Argentina',
+                'Armenia',
+                'Australia',
+                'Austria',
+                'Azerbaijan',
+                'Bahamas',
+                'Bahrain',
+                'Bangladesh',
+                'Barbados',
+                'Belarus',
+                'Belgium',
+                'Belize',
+                'Benin',
+                'Bhutan',
+                'Bolivia',
+                'Bosnia and Herzegovina',
+                'Botswana',
+                'Brazil',
+                'Brunei',
+                'Bulgaria',
+                'Burkina Faso',
+                'Burundi',
+                'Cambodia',
+                'Cameroon',
+                'Canada',
+                'Cape Verde',
+                'Central African Republic',
+                'Chad',
+                'Chile',
+                'China',
+                'Colombia',
+                'Comoros',
+                'Congo',
+                'Costa Rica',
+                "Cote d'Ivoire",
+                'Croatia',
+                'Cuba',
+                'Cyprus',
+                'Czech Republic',
+                'Denmark',
+                'Djibouti',
+                'Dominica',
+                'Dominican Republic',
+                'Ecuador',
+                'Egypt',
+                'El Salvador',
+                'Equatorial Guinea',
+                'Eritrea',
+                'Estonia',
+                'Eswatini',
+                'Ethiopia',
+                'Fiji',
+                'Finland',
+                'France',
+                'Gabon',
+                'Gambia',
+                'Georgia',
+                'Germany',
+                'Ghana',
+                'Greece',
+                'Grenada',
+                'Guatemala',
+                'Guinea',
+                'Guinea-Bissau',
+                'Guyana',
+                'Haiti',
+                'Honduras',
+                'Hungary',
+                'Iceland',
+                'India',
+                'Indonesia',
+                'Iran',
+                'Iraq',
+                'Ireland',
+                'Israel',
+                'Italy',
+                'Jamaica',
+                'Japan',
+                'Jordan',
+                'Kazakhstan',
+                'Kenya',
+                'Kiribati',
+                'Kuwait',
+                'Kyrgyzstan',
+                'Laos',
+                'Latvia',
+                'Lebanon',
+                'Lesotho',
+                'Liberia',
+                'Libya',
+                'Liechtenstein',
+                'Lithuania',
+                'Luxembourg',
+                'Madagascar',
+                'Malawi',
+                'Malaysia',
+                'Maldives',
+                'Mali',
+                'Malta',
+                'Marshall Islands',
+                'Mauritania',
+                'Mauritius',
+                'Mexico',
+                'Moldova',
+                'Monaco',
+                'Mongolia',
+                'Montenegro',
+                'Morocco',
+                'Mozambique',
+                'Myanmar',
+                'Namibia',
+                'Nauru',
+                'Nepal',
+                'Netherlands',
+                'New Zealand',
+                'Nicaragua',
+                'Niger',
+                'Nigeria',
+                'North Korea',
+                'North Macedonia',
+                'Norway',
+                'Oman',
+                'Pakistan',
+                'Palau',
+                'Panama',
+                'Papua New Guinea',
+                'Paraguay',
+                'Peru',
+                'Philippines',
+                'Poland',
+                'Portugal',
+                'Qatar',
+                'Romania',
+                'Russia',
+                'Rwanda',
+                'Saint Kitts and Nevis',
+                'Saint Lucia',
+                'Saint Vincent and the Grenadines',
+                'Samoa',
+                'San Marino',
+                'Sao Tome and Principe',
+                'Saudi Arabia',
+                'Senegal',
+                'Serbia',
+                'Seychelles',
+                'Sierra Leone',
+                'Singapore',
+                'Slovakia',
+                'Slovenia',
+                'Solomon Islands',
+                'Somalia',
+                'South Africa',
+                'South Korea',
+                'South Sudan',
+                'Spain',
+                'Sri Lanka',
+                'Sudan',
+                'Suriname',
+                'Sweden',
+                'Switzerland',
+                'Syria',
+                'Taiwan',
+                'Tajikistan',
+                'Tanzania',
+                'Thailand',
+                'Togo',
+                'Tonga',
+                'Trinidad and Tobago',
+                'Tunisia',
+                'Turkey',
+                'Turkmenistan',
+                'Tuvalu',
+                'Uganda',
+                'Ukraine',
+                'United Arab Emirates',
+                'United Kingdom',
+                'United States',
+                'Uruguay',
+                'Uzbekistan',
+                'Vanuatu',
+                'Vatican City',
+                'Venezuela',
+                'Vietnam',
+                'Yemen',
+                'Zambia',
+                'Zimbabwe',
+              ]}
+              value={country}
+              onChange={(_event, value) => setCountry(value)}
+              renderInput={(params) => (
+                <TextField {...params} name="country" label="Country" />
+              )}
+            />
+            <Button
+              fullWidth
+              size="large"
+              type="button"
+              variant="contained"
+              disabled={isFinishing}
+              onClick={handleFinishProfile}
+            >
+              {isFinishing ? 'Finishing...' : 'Finish'}
             </Button>
           </Stack>
         ) : null}

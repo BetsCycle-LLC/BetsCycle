@@ -19,7 +19,8 @@ const preferencesSchema = new Schema(
 
 const personalInfoSchema = new Schema(
   {
-    fullName: { type: String },
+    firstName: { type: String },
+    lastName: { type: String },
     dateOfBirth: { type: Date },
     phoneNumber: { type: String },
     country: { type: String },
