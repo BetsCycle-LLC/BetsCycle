@@ -5,9 +5,15 @@ import { useBoolean } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Link from '@mui/material/Link';
+import Typography from '@mui/material/Typography';
+import Breadcrumbs from '@mui/material/Breadcrumbs';
 import { useTheme } from '@mui/material/styles';
 
 import { _langs, _notifications } from 'src/_mock';
+import { usePathname } from 'src/routes/hooks';
+import { RouterLink } from 'src/routes/components';
 
 import { NavMobile, NavDesktop } from './nav';
 import { layoutClasses } from '../core/classes';
@@ -24,6 +30,7 @@ import { LayoutSection } from '../core/layout-section';
 import { AccountPopover } from '../components/account-popover';
 import { LanguagePopover } from '../components/language-popover';
 import { NotificationsPopover } from '../components/notifications-popover';
+import { useAuth } from 'src/auth/use-auth';
 
 import type { MainSectionProps } from '../core/main-section';
 import type { HeaderSectionProps } from '../core/header-section';
@@ -49,6 +56,8 @@ export function DashboardLayout({
   layoutQuery = 'lg',
 }: DashboardLayoutProps) {
   const theme = useTheme();
+  const pathname = usePathname();
+  const { user, openAuthDialog } = useAuth();
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
@@ -58,6 +67,12 @@ export function DashboardLayout({
         maxWidth: false,
       },
     };
+
+    const breadcrumbItems = pathname
+      .split('?')[0]
+      .split('#')[0]
+      .split('/')
+      .filter(Boolean);
 
     const headerSlots: HeaderSectionProps['slots'] = {
       topArea: (
@@ -73,6 +88,41 @@ export function DashboardLayout({
             sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
           />
           <NavMobile data={navData} open={open} onClose={onClose} workspaces={_workspaces} />
+          <Breadcrumbs
+            aria-label="breadcrumb"
+            sx={{
+              ml: 1,
+              color: 'text.secondary',
+              '& a': { color: 'text.secondary' },
+              '& .MuiBreadcrumbs-ol': { alignItems: 'center' },
+            }}
+          >
+            <Link component={RouterLink} href="/">
+              Home
+            </Link>
+            {breadcrumbItems.map((segment, index) => {
+              const href = `/${breadcrumbItems.slice(0, index + 1).join('/')}`;
+              const label = segment
+                .replace(/-/g, ' ')
+                .replace(/\b\w/g, (char) => char.toUpperCase());
+
+              const isLast = index === breadcrumbItems.length - 1;
+
+              if (isLast) {
+                return (
+                  <Typography key={href} color="text.primary" variant="body2">
+                    {label}
+                  </Typography>
+                );
+              }
+
+              return (
+                <Link key={href} component={RouterLink} href={href}>
+                  {label}
+                </Link>
+              );
+            })}
+          </Breadcrumbs>
         </>
       ),
       rightArea: (
@@ -87,10 +137,35 @@ export function DashboardLayout({
           <LanguagePopover data={_langs} />
 
           {/** @slot Notifications popover */}
-          <NotificationsPopover data={_notifications} />
+          {
+            user && (
+              <NotificationsPopover data={_notifications} />
+            )
+          }
 
-          {/** @slot Account drawer */}
-          <AccountPopover data={_account} />
+          {user ? (
+            /** @slot Account drawer */
+            <AccountPopover data={_account} />
+          ) : (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Button
+                size="small"
+                color="inherit"
+                variant="outlined"
+                onClick={() => openAuthDialog('sign-in')}
+              >
+                Sign in
+              </Button>
+              <Button
+                size="small"
+                color="inherit"
+                variant="contained"
+                onClick={() => openAuthDialog('sign-up')}
+              >
+                Sign up
+              </Button>
+            </Box>
+          )}
         </Box>
       ),
     };

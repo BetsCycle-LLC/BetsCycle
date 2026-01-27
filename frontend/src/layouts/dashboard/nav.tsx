@@ -17,6 +17,7 @@ import { RouterLink } from 'src/routes/components';
 import { Iconify } from 'src/components/iconify';
 import { Logo } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useAuth } from 'src/auth/use-auth';
 
 import { WorkspacesPopover } from '../components/workspaces-popover';
 
@@ -114,6 +115,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const { user, openAuthDialog, logout } = useAuth();
 
   const sections = data.reduce<
     Array<{
@@ -157,6 +159,84 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
   );
 
   const renderNavItem = (item: Exclude<NavItem, { type: 'subheader' }>) => {
+    if (item.type === 'action') {
+      const label = item.action === 'logout' && !user ? 'Sign in' : item.title;
+
+      const handleAction = () => {
+        if (item.action === 'sign-in') {
+          openAuthDialog('sign-in');
+          return;
+        }
+
+        if (item.action === 'sign-up') {
+          openAuthDialog('sign-up');
+          return;
+        }
+
+        if (user) {
+          logout();
+          return;
+        }
+
+        openAuthDialog('sign-in');
+      };
+
+      return (
+        <ListItem disableGutters disablePadding key={item.title}>
+          <ListItemButton
+            disableGutters
+            onClick={handleAction}
+            sx={[
+              (theme) => ({
+                pl: 2,
+                py: 0.75,
+                gap: 1.5,
+                pr: 1.5,
+                borderRadius: 1,
+                typography: 'body2',
+                fontSize: 13,
+                fontWeight: 'fontWeightMedium',
+                color: theme.vars.palette.text.secondary,
+                minHeight: 40,
+                transition: theme.transitions.create(['background-color', 'color'], {
+                  duration: theme.transitions.duration.shortest,
+                }),
+                '& .nav-item-icon': {
+                  color: theme.vars.palette.text.disabled,
+                },
+                '&:hover': {
+                  color: theme.vars.palette.text.primary,
+                  bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+                  '& .nav-item-icon': {
+                    color: theme.vars.palette.text.primary,
+                  },
+                },
+              }),
+            ]}
+          >
+            <Box
+              component="span"
+              className="nav-item-icon"
+              sx={{
+                width: 22,
+                height: 22,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {item.icon}
+            </Box>
+
+            <Box component="span" sx={{ flexGrow: 1 }}>
+              {label}
+            </Box>
+
+            {item.info && renderInfo(item.info)}
+          </ListItemButton>
+        </ListItem>
+      );
+    }
     if (item.type === 'toggle') {
       const isOpen = openGroups[item.title] ?? item.defaultOpen ?? true;
       const isGroupActive = item.children.some((child) => child.path === pathname);

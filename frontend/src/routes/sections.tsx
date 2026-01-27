@@ -7,7 +7,6 @@ import { varAlpha } from 'minimal-shared/utils';
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
-import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 
 // ----------------------------------------------------------------------
@@ -22,8 +21,6 @@ export const VipPage = lazy(() => import('src/pages/vip'));
 export const WalletPage = lazy(() => import('src/pages/wallet'));
 export const SupportPage = lazy(() => import('src/pages/support'));
 export const UserPage = lazy(() => import('src/pages/user'));
-export const SignInPage = lazy(() => import('src/pages/sign-in'));
-export const SignUpPage = lazy(() => import('src/pages/sign-up'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 const renderFallback = () => (
@@ -68,22 +65,7 @@ export const routesSection: RouteObject[] = [
       { path: 'user', element: <UserPage /> },
     ],
   },
-  {
-    path: 'sign-in',
-    element: (
-      <AuthLayout>
-        <SignInPage />
-      </AuthLayout>
-    ),
-  },
-  {
-    path: 'sign-up',
-    element: (
-      <AuthLayout>
-        <SignUpPage />
-      </AuthLayout>
-    ),
-  },
+  // Auth is handled via modal instead of routes.
   {
     path: '404',
     element: <Page404 />,

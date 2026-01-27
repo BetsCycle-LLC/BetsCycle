@@ -11,7 +11,6 @@ import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
 
 import { useRouter } from 'src/routes/hooks';
-import { RouterLink } from 'src/routes/components';
 
 import { Iconify } from 'src/components/iconify';
 import { useAuth } from 'src/auth/use-auth';
@@ -20,7 +19,7 @@ import { useAuth } from 'src/auth/use-auth';
 
 export function SignInView() {
   const router = useRouter();
-  const { loginUser } = useAuth();
+  const { loginUser, openAuthDialog, closeAuthDialog } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -35,6 +34,7 @@ export function SignInView() {
     try {
       await loginUser({ email, password });
       router.push('/');
+      closeAuthDialog();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to sign in';
       setErrorMessage(message);
@@ -131,7 +131,12 @@ export function SignInView() {
           }}
         >
           Don’t have an account?
-          <Link component={RouterLink} to="/sign-up" variant="subtitle2" sx={{ ml: 0.5 }}>
+          <Link
+            component="button"
+            variant="subtitle2"
+            sx={{ ml: 0.5 }}
+            onClick={() => openAuthDialog('sign-up')}
+          >
             Get started
           </Link>
         </Typography>

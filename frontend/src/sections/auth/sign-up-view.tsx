@@ -10,14 +10,13 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
 import { useRouter } from 'src/routes/hooks';
-import { RouterLink } from 'src/routes/components';
 
 import { Iconify } from 'src/components/iconify';
 import { useAuth } from 'src/auth/use-auth';
 
 export function SignUpView() {
   const router = useRouter();
-  const { registerUser } = useAuth();
+  const { registerUser, openAuthDialog, closeAuthDialog } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
@@ -33,6 +32,7 @@ export function SignUpView() {
     try {
       await registerUser({ username, email, password });
       router.push('/');
+      closeAuthDialog();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to create account';
       setErrorMessage(message);
@@ -60,7 +60,12 @@ export function SignUpView() {
           }}
         >
           Already have an account?
-          <Link component={RouterLink} to="/sign-in" variant="subtitle2" sx={{ ml: 0.5 }}>
+          <Link
+            component="button"
+            variant="subtitle2"
+            sx={{ ml: 0.5 }}
+            onClick={() => openAuthDialog('sign-in')}
+          >
             Sign in
           </Link>
         </Typography>

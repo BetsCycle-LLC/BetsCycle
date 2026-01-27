@@ -13,8 +13,16 @@ type NavItemLink = NavItemBase & {
   info?: React.ReactNode;
 };
 
+type NavItemAction = NavItemBase & {
+  type: 'action';
+  action: 'sign-in' | 'sign-up' | 'logout';
+  icon: React.ReactNode;
+  info?: React.ReactNode;
+};
+
 export type NavItem =
   | NavItemLink
+  | NavItemAction
   | (NavItemBase & {
       type: 'toggle';
       icon: React.ReactNode;
@@ -372,9 +380,9 @@ export const navData: NavItem[] = [
     ],
   },
   {
-    type: 'item',
+    type: 'action',
     title: 'Log Out',
-    path: '/sign-in',
+    action: 'logout',
     icon: <Iconify icon="eva:arrow-ios-forward-fill" />,
   },
 ];
