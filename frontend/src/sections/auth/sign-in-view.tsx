@@ -14,12 +14,14 @@ import { useRouter } from 'src/routes/hooks';
 
 import { Iconify } from 'src/components/iconify';
 import { useAuth } from 'src/auth/use-auth';
+import { useSnackbar } from 'notistack';
 
 // ----------------------------------------------------------------------
 
 export function SignInView() {
   const router = useRouter();
   const { loginUser, openAuthDialog, closeAuthDialog } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -33,6 +35,7 @@ export function SignInView() {
 
     try {
       await loginUser({ email, password });
+      enqueueSnackbar('Signed in successfully.', { variant: 'success' });
       router.push('/');
       closeAuthDialog();
     } catch (error) {
@@ -41,7 +44,7 @@ export function SignInView() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [email, loginUser, password, router]);
+  }, [closeAuthDialog, email, enqueueSnackbar, loginUser, password, router]);
 
   const renderForm = (
     <Box

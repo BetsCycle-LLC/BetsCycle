@@ -13,14 +13,15 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { useRouter } from 'src/routes/hooks';
 
 import { Iconify } from 'src/components/iconify';
-import { CustomSnackbar } from 'src/components/snackbar/custom-snackbar';
 import { useAuth } from 'src/auth/use-auth';
 import { verifyEmail } from 'src/services/auth-api';
 import { Divider } from '@mui/material';
+import { useSnackbar } from 'notistack';
 
 export function SignUpView() {
   const router = useRouter();
   const { registerUser, loginUser, openAuthDialog, closeAuthDialog } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -34,7 +35,6 @@ export function SignUpView() {
   const [verificationPending, setVerificationPending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState('');
-  const [showSuccess, setShowSuccess] = useState(false);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const handleSignUp = useCallback(async () => {
@@ -52,14 +52,16 @@ export function SignUpView() {
       await registerUser({ username, email, password });
       setVerificationPending(true);
       setVerificationMessage('We sent a 6-digit verification code to your email.');
-      setShowSuccess(true);
+      enqueueSnackbar('Account created successfully. Check your email for the verification code.', {
+        variant: 'success',
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to create account';
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
     }
-  }, [confirmPassword, email, password, registerUser, router, username]);
+  }, [confirmPassword, email, enqueueSnackbar, password, registerUser, router, username]);
 
   const handleVerifyEmail = useCallback(async () => {
     setErrorMessage('');
@@ -67,6 +69,7 @@ export function SignUpView() {
 
     try {
       await verifyEmail({ email, code: verificationCode });
+      enqueueSnackbar('Email verified successfully.', { variant: 'success' });
       await loginUser({ email, password });
       router.push('/');
       closeAuthDialog();
@@ -76,7 +79,7 @@ export function SignUpView() {
     } finally {
       setIsVerifying(false);
     }
-  }, [closeAuthDialog, email, loginUser, password, router, verificationCode]);
+  }, [closeAuthDialog, email, enqueueSnackbar, loginUser, password, router, verificationCode]);
 
   const otpValues = Array.from({ length: 6 }, (_, index) => verificationCode[index] ?? '');
 
@@ -296,13 +299,6 @@ export function SignUpView() {
           </Link>
         </Typography>
       </Box>
-      <CustomSnackbar
-        open={showSuccess}
-        autoHideDuration={4000}
-        onClose={() => setShowSuccess(false)}
-        message="Account created successfully. Check your email for the verification code."
-        severity="success"
-      />
     </>
   );
 }
