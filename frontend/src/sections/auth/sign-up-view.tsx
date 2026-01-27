@@ -607,6 +607,13 @@ export function SignUpView() {
               ]}
               value={country}
               onChange={(_event, value) => setCountry(value)}
+              slotProps={{
+                paper: {
+                  sx: (theme) => ({
+                    boxShadow: theme.vars.shadows[16],
+                  }),
+                },
+              }}
               renderInput={(params) => (
                 <TextField {...params} name="country" label="Country" />
               )}
