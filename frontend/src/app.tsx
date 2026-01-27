@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { usePathname } from 'src/routes/hooks';
 
-import { ThemeProvider } from 'src/theme/theme-provider';
+import { AuthModal } from 'src/auth/auth-modal';
 
 // ----------------------------------------------------------------------
 
@@ -16,9 +16,10 @@ export default function App({ children }: AppProps) {
   useScrollToTop();
 
   return (
-    <ThemeProvider>
+    <>
       {children}
-    </ThemeProvider>
+      <AuthModal />
+    </>
   );
 }
 
