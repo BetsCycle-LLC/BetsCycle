@@ -18,9 +18,11 @@ import { Iconify } from 'src/components/iconify';
 export type UserProps = {
   id: string;
   name: string;
+  email?: string;
+  phoneNumber?: string;
   role: string;
   status: string;
-  company: string;
+  country: string;
   avatarUrl: string;
   isVerified: boolean;
 };
@@ -58,11 +60,20 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             }}
           >
             <Avatar alt={row.name} src={row.avatarUrl} />
-            {row.name}
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Box component="span">{row.name}</Box>
+              {row.email && (
+                <Box component="span" sx={{ color: 'text.secondary', typography: 'caption' }}>
+                  {row.email}
+                </Box>
+              )}
+            </Box>
           </Box>
         </TableCell>
 
-        <TableCell>{row.company}</TableCell>
+        <TableCell>{row.phoneNumber || '-'}</TableCell>
+
+        <TableCell>{row.country}</TableCell>
 
         <TableCell>{row.role}</TableCell>
 

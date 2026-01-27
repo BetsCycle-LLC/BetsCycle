@@ -24,6 +24,8 @@ export const _myAccount = {
 export const _users = [...Array(24)].map((_, index) => ({
   id: _id(index),
   name: _fullName(index),
+  email: `user${index + 1}@example.com`,
+  phoneNumber: `+1 555 010 ${String(index + 1).padStart(2, '0')}`,
   company: _company(index),
   isVerified: _boolean(index),
   avatarUrl: `/assets/images/avatar/avatar-${index + 1}.webp`,
