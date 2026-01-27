@@ -1,9 +1,11 @@
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
+import crypto from 'crypto';
 
 import { Player, type PlayerDocument } from '../models/Player';
 import { signToken } from '../utils/jwt';
 import { comparePassword, hashPassword } from '../utils/password';
+import { sendVerificationEmail } from '../utils/email';
 
 function sanitizePlayer(player: HydratedDocument<PlayerDocument> | null) {
   if (!player) {
@@ -44,6 +46,9 @@ export async function register(req: Request, res: Response) {
 
   const passwordHash = await hashPassword(String(password));
 
+  const emailVerificationCode = crypto.randomInt(100000, 1000000).toString();
+  const emailVerificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
   const player = await Player.create({
     username,
     email,
@@ -54,11 +59,21 @@ export async function register(req: Request, res: Response) {
     avatar,
     playerType,
     preferences,
+    verification: {
+      emailVerified: false,
+      emailVerificationCode,
+      emailVerificationExpiresAt,
+    },
   });
 
-  const token = signToken(player._id.toString());
+  try {
+    await sendVerificationEmail(player.email, emailVerificationCode);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('SendGrid failed. Verification code:', emailVerificationCode);
+  }
 
-  return res.status(201).json({ token, player: sanitizePlayer(player) });
+  return res.status(201).json({ player: sanitizePlayer(player) });
 }
 
 export async function login(req: Request, res: Response) {
@@ -80,6 +95,10 @@ export async function login(req: Request, res: Response) {
 
   if (!player) {
     return res.status(401).json({ message: 'Invalid credentials.' });
+  }
+
+  if (!player.verification?.emailVerified) {
+    return res.status(403).json({ message: 'Email not verified.' });
   }
 
   const isMatch = await comparePassword(String(password), player.passwordHash);
@@ -105,6 +124,45 @@ export async function me(req: Request, res: Response) {
   if (!player) {
     return res.status(404).json({ message: 'Player not found' });
   }
+
+  return res.json({ player: sanitizePlayer(player) });
+}
+
+export async function verifyEmail(req: Request, res: Response) {
+  const { email, code } = req.body ?? {};
+
+  if (!email || !code) {
+    return res.status(400).json({ message: 'Email and verification code are required.' });
+  }
+
+  const player = await Player.findOne({ email: String(email).toLowerCase() });
+
+  if (!player) {
+    return res.status(404).json({ message: 'Account not found.' });
+  }
+
+  const verification = player.verification;
+
+  if (!verification?.emailVerificationCode || !verification.emailVerificationExpiresAt) {
+    return res.status(400).json({ message: 'Verification code is not available.' });
+  }
+
+  if (verification.emailVerificationExpiresAt.getTime() < Date.now()) {
+    return res.status(400).json({ message: 'Verification code expired.' });
+  }
+
+  if (verification.emailVerificationCode !== String(code)) {
+    return res.status(400).json({ message: 'Invalid verification code.' });
+  }
+
+  player.verification = {
+    ...(player.verification ?? {}),
+    emailVerified: true,
+    emailVerificationCode: undefined,
+    emailVerificationExpiresAt: undefined,
+  };
+
+  await player.save();
 
   return res.json({ player: sanitizePlayer(player) });
 }

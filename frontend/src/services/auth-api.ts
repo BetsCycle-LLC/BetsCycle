@@ -13,6 +13,10 @@ export type AuthResponse = {
   player: AuthUser;
 };
 
+export type RegisterResponse = {
+  player: AuthUser;
+};
+
 export type LoginPayload = {
   email?: string;
   username?: string;
@@ -58,7 +62,7 @@ export function login(payload: LoginPayload) {
 }
 
 export function register(payload: RegisterPayload) {
-  return request<AuthResponse>('/api/auth/register', {
+  return request<RegisterResponse>('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -69,6 +73,13 @@ export function fetchProfile(token: string) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+}
+
+export function verifyEmail(payload: { email: string; code: string }) {
+  return request<{ player: AuthUser }>('/api/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify(payload),
   });
 }
 

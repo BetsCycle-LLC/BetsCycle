@@ -1,6 +1,6 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { AuthUser, LoginPayload, RegisterPayload } from 'src/services/auth-api';
+import type { AuthUser, LoginPayload, RegisterPayload, RegisterResponse } from 'src/services/auth-api';
 import { fetchProfile, login, register } from 'src/services/auth-api';
 
 type AuthContextValue = {
@@ -12,7 +12,7 @@ type AuthContextValue = {
     mode: 'sign-in' | 'sign-up';
   };
   loginUser: (payload: LoginPayload) => Promise<void>;
-  registerUser: (payload: RegisterPayload) => Promise<void>;
+  registerUser: (payload: RegisterPayload) => Promise<RegisterResponse>;
   logout: () => void;
   openAuthDialog: (mode: 'sign-in' | 'sign-up') => void;
   closeAuthDialog: () => void;
@@ -82,9 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [setAuth]);
 
   const registerUser = useCallback(async (payload: RegisterPayload) => {
-    const result = await register(payload);
-    setAuth(result.token, result.player);
-  }, [setAuth]);
+    return register(payload);
+  }, []);
 
   useEffect(() => {
     const stored = readStoredAuth();

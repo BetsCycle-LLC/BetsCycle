@@ -31,7 +31,8 @@ const verificationSchema = new Schema(
   {
     emailVerified: { type: Boolean, default: false },
     phoneVerified: { type: Boolean, default: false },
-    emailVerificationToken: { type: String },
+    emailVerificationCode: { type: String },
+    emailVerificationExpiresAt: { type: Date },
     phoneVerificationToken: { type: String },
   },
   { _id: false },

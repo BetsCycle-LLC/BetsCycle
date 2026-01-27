@@ -16,5 +16,7 @@ export const env = {
   jwtSecret: readEnv('JWT_SECRET'),
   jwtExpiresIn: readEnv('JWT_EXPIRES_IN', '7d'),
   clientOrigin: readEnv('CLIENT_ORIGIN', 'http://localhost:5173'),
+  sendgridApiKey: readEnv('SENDGRID_API_KEY'),
+  sendgridFromEmail: readEnv('SENDGRID_FROM_EMAIL'),
 };
 
