@@ -1,7 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import Divider from '@mui/material/Divider';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import TableBody from '@mui/material/TableBody';
@@ -12,6 +15,7 @@ import TablePagination from '@mui/material/TablePagination';
 import { _users } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -26,15 +30,75 @@ import type { UserProps } from '../user-table-row';
 
 // ----------------------------------------------------------------------
 
+type UserTabValue = 'players' | 'affiliates' | 'stakers' | 'banned';
+
+const USER_TABS: Array<{ value: UserTabValue; label: string }> = [
+  { value: 'players', label: 'Players' },
+  { value: 'affiliates', label: 'Affiliate Partners' },
+  { value: 'stakers', label: 'Stakers' },
+  { value: 'banned', label: 'Banned Users' },
+];
+
+const TAB_LABEL_COLORS: Record<UserTabValue, 'default' | 'info' | 'success' | 'warning' | 'error'> =
+  {
+    players: 'info',
+    affiliates: 'warning',
+    stakers: 'success',
+    banned: 'error',
+  };
+
+const getUserType = (user: UserProps, index: number): UserTabValue => {
+  if (user.status === 'banned') {
+    return 'banned';
+  }
+
+  const cycle: UserTabValue[] = ['players', 'affiliates', 'stakers'];
+  return cycle[index % cycle.length];
+};
+
 export function UserView() {
   const table = useTable();
 
   const [filterName, setFilterName] = useState('');
+  const [filterRole, setFilterRole] = useState('all');
+  const [activeTab, setActiveTab] = useState<UserTabValue>('players');
+
+  const usersWithType = useMemo(
+    () =>
+      _users.map((user, index) => ({
+        ...user,
+        userType: getUserType(user, index),
+      })),
+    [_users]
+  );
+
+  const usersInTab = useMemo(
+    () => usersWithType.filter((user) => user.userType === activeTab),
+    [usersWithType, activeTab]
+  );
+
+  const tabCounts = useMemo(
+    () =>
+      USER_TABS.reduce(
+        (acc, tab) => {
+          acc[tab.value] = usersWithType.filter((user) => user.userType === tab.value).length;
+          return acc;
+        },
+        {} as Record<UserTabValue, number>
+      ),
+    [usersWithType]
+  );
+
+  const roleOptions = useMemo(
+    () => ['all', ...Array.from(new Set(usersWithType.map((user) => user.role)))],
+    [usersWithType]
+  );
 
   const dataFiltered: UserProps[] = applyFilter({
-    inputData: _users,
+    inputData: usersInTab,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
+    filterRole,
   });
 
   const notFound = !dataFiltered.length && !!filterName;
@@ -49,23 +113,56 @@ export function UserView() {
         }}
       >
         <Typography variant="h4" sx={{ flexGrow: 1 }}>
-          Users
+          List
         </Typography>
         <Button
           variant="contained"
           color="inherit"
           startIcon={<Iconify icon="mingcute:add-line" />}
         >
-          New user
+          Add user
         </Button>
       </Box>
 
       <Card>
+        <Tabs
+          value={activeTab}
+          onChange={(_, value: UserTabValue) => {
+            setActiveTab(value);
+            table.onResetPage();
+            table.onResetSelected();
+          }}
+          sx={{ px: 2, bgcolor: 'background.neutral' }}
+        >
+          {USER_TABS.map((tab) => (
+            <Tab
+              key={tab.value}
+              value={tab.value}
+              label={
+                <Box sx={{ gap: 1, display: 'flex', alignItems: 'center' }}>
+                  <Box component="span">{tab.label}</Box>
+                  <Label color={TAB_LABEL_COLORS[tab.value]} variant="soft">
+                    {tabCounts[tab.value] ?? 0}
+                  </Label>
+                </Box>
+              }
+            />
+          ))}
+        </Tabs>
+
+        <Divider />
+
         <UserTableToolbar
           numSelected={table.selected.length}
           filterName={filterName}
           onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
             setFilterName(event.target.value);
+            table.onResetPage();
+          }}
+          filterRole={filterRole}
+          roleOptions={roleOptions}
+          onFilterRole={(event) => {
+            setFilterRole(event.target.value);
             table.onResetPage();
           }}
         />
@@ -76,13 +173,13 @@ export function UserView() {
               <UserTableHead
                 order={table.order}
                 orderBy={table.orderBy}
-                rowCount={_users.length}
+                rowCount={dataFiltered.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}
                 onSelectAllRows={(checked) =>
                   table.onSelectAllRows(
                     checked,
-                    _users.map((user) => user.id)
+                    dataFiltered.map((user) => user.id)
                   )
                 }
                 headLabel={[
@@ -111,7 +208,7 @@ export function UserView() {
 
                 <TableEmptyRows
                   height={68}
-                  emptyRows={emptyRows(table.page, table.rowsPerPage, _users.length)}
+                  emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
                 />
 
                 {notFound && <TableNoData searchQuery={filterName} />}
@@ -123,7 +220,7 @@ export function UserView() {
         <TablePagination
           component="div"
           page={table.page}
-          count={_users.length}
+          count={dataFiltered.length}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
@@ -160,6 +257,10 @@ export function useTable() {
     setSelected([]);
   }, []);
 
+  const onResetSelected = useCallback(() => {
+    setSelected([]);
+  }, []);
+
   const onSelectRow = useCallback(
     (inputValue: string) => {
       const newSelected = selected.includes(inputValue)
@@ -193,6 +294,7 @@ export function useTable() {
     onSort,
     orderBy,
     selected,
+    onResetSelected,
     rowsPerPage,
     onSelectRow,
     onResetPage,
