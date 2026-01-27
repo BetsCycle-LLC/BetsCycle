@@ -7,13 +7,13 @@ import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import Snackbar from '@mui/material/Snackbar';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
 import { useRouter } from 'src/routes/hooks';
 
 import { Iconify } from 'src/components/iconify';
+import { CustomSnackbar } from 'src/components/snackbar/custom-snackbar';
 import { useAuth } from 'src/auth/use-auth';
 import { verifyEmail } from 'src/services/auth-api';
 import { Divider } from '@mui/material';
@@ -296,12 +296,12 @@ export function SignUpView() {
           </Link>
         </Typography>
       </Box>
-      <Snackbar
+      <CustomSnackbar
         open={showSuccess}
         autoHideDuration={4000}
         onClose={() => setShowSuccess(false)}
         message="Account created successfully. Check your email for the verification code."
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        severity="success"
       />
     </>
   );
