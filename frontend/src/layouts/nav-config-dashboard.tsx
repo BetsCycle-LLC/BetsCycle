@@ -49,28 +49,22 @@ export const navData: NavItem[] = [
       },
       {
         type: 'item',
-        title: 'Current Balance (Normal & Staking)',
-        path: '/dashboard',
+        title: 'Current Balance',
+        path: '/dashboard/balance',
         icon: <Iconify icon="solar:share-bold" />,
       },
       {
         type: 'item',
-        title: 'Recent Bet History (Normal Player)',
-        path: '/dashboard',
+        title: 'Recent Bet History',
+        path: '/dashboard/bet-history',
         icon: <Iconify icon="solar:clock-circle-outline" />,
       },
       {
         type: 'item',
-        title: 'Staking Overview (Staking Player)',
-        path: '/dashboard',
+        title: 'Staking Overview',
+        path: '/dashboard/staking',
         icon: <Iconify icon="eva:trending-up-fill" />,
-      },
-      {
-        type: 'item',
-        title: 'Quick Access to Active Games/Markets',
-        path: '/dashboard',
-        icon: <Iconify icon="eva:trending-up-fill" />,
-      },
+      }
     ],
   },
   { type: 'subheader', title: 'Casino & Sports' },
@@ -81,14 +75,14 @@ export const navData: NavItem[] = [
     children: [
       {
         type: 'item',
-        title: 'Popular Slots',
-        path: '/casino',
+        title: 'Slots',
+        path: '/casino?tab=slots',
         icon: <Iconify icon="solar:check-circle-bold" />,
       },
       {
         type: 'item',
         title: 'New Slots',
-        path: '/casino',
+        path: '/casino?tab=new-slots',
         icon: <Iconify icon="solar:clock-circle-outline" />,
       },
       {
