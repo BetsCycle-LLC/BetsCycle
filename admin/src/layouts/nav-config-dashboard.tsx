@@ -57,29 +57,10 @@ export const navData: NavItem[] = [
   },
   { type: 'subheader', title: 'User Management' },
   {
-    type: 'toggle',
+    type: 'item',
     title: 'All Users',
     icon: <Iconify icon="solar:share-bold" />,
-    children: [
-      {
-        type: 'item',
-        title: 'View All Players',
-        path: '/admin/users/players',
-        icon: <Iconify icon="solar:eye-bold" />,
-      },
-      {
-        type: 'item',
-        title: 'View All Affiliates',
-        path: '/admin/users/affiliates',
-        icon: <Iconify icon="solar:eye-bold" />,
-      },
-      {
-        type: 'item',
-        title: 'View All Stakers',
-        path: '/admin/users/stakers',
-        icon: <Iconify icon="solar:eye-bold" />,
-      },
-    ],
+    path: '/admin/users',
   },
   {
     type: 'toggle',

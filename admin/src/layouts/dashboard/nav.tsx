@@ -464,7 +464,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
               bgcolor: isActived
                 ? varAlpha(theme.vars.palette.success.mainChannel, 0.16)
                 : 'transparent',
-              minHeight: 40,
+              minHeight: 44,
               transition: theme.transitions.create(['background-color', 'color'], {
                 duration: theme.transitions.duration.shortest,
               }),
