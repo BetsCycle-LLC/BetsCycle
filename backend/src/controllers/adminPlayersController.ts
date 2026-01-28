@@ -81,7 +81,7 @@ export async function updatePlayer(req: Request, res: Response) {
     return res.status(400).json({ message: 'Player id is required.' });
   }
 
-  const { avatar, email, personalInfo } = req.body ?? {};
+  const { avatar, email, personalInfo, status } = req.body ?? {};
 
   const updates: Record<string, unknown> = {};
 
@@ -91,6 +91,10 @@ export async function updatePlayer(req: Request, res: Response) {
 
   if (avatar !== undefined) {
     updates.avatar = avatar;
+  }
+
+  if (status !== undefined) {
+    updates.status = status;
   }
 
   if (personalInfo) {

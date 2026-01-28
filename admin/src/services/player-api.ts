@@ -22,6 +22,7 @@ export type AdminPlayer = {
 export type UpdateAdminPlayerPayload = {
   email?: string;
   avatar?: string;
+  status?: string;
   personalInfo?: {
     firstName?: string;
     lastName?: string;

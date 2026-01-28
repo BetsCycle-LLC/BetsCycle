@@ -91,6 +91,10 @@ export function UserView() {
   const [avatarEdited, setAvatarEdited] = useState(false);
   const [editFirstName, setEditFirstName] = useState('');
   const [editLastName, setEditLastName] = useState('');
+  const [confirmAction, setConfirmAction] = useState<{
+    user: UserProps;
+    status: 'active' | 'banned' | 'deactivated';
+  } | null>(null);
   const avatarEditorRef = useRef<any>(null);
 
   const mockUsersWithType = useMemo(
@@ -142,7 +146,7 @@ export function UserView() {
 
     setPlayersLoading(true);
 
-    fetchAdminPlayers(token, 'active')
+    fetchAdminPlayers(token)
       .then((response) => {
         const mappedPlayers: UserProps[] = response.players.map((player) =>
           mapAdminPlayerToUser(player)
@@ -287,6 +291,55 @@ export function UserView() {
     token,
   ]);
 
+  const handleUpdateStatus = useCallback(
+    async (user: UserProps, status: string) => {
+      if (!token) {
+        enqueueSnackbar('Unable to update user. Please sign in again.', { variant: 'error' });
+        return;
+      }
+
+      try {
+        const response = await updateAdminPlayer(token, user.id, { status });
+        const updatedUser = mapAdminPlayerToUser(response.player);
+        setPlayers((prev) => prev.map((item) => (item.id === updatedUser.id ? updatedUser : item)));
+        enqueueSnackbar(`User ${status}.`, { variant: 'success' });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unable to update user.';
+        enqueueSnackbar(message, { variant: 'error' });
+      }
+    },
+    [enqueueSnackbar, mapAdminPlayerToUser, token]
+  );
+
+  const handleBanUser = useCallback((user: UserProps) => {
+    setConfirmAction({ user, status: 'banned' });
+  }, []);
+
+  const handleDeactivateUser = useCallback((user: UserProps) => {
+    setConfirmAction({ user, status: 'deactivated' });
+  }, []);
+
+  const handleActivateUser = useCallback((user: UserProps) => {
+    setConfirmAction({ user, status: 'active' });
+  }, []);
+
+  const handleRecoverUser = useCallback((user: UserProps) => {
+    setConfirmAction({ user, status: 'active' });
+  }, []);
+
+  const handleConfirmClose = useCallback(() => {
+    setConfirmAction(null);
+  }, []);
+
+  const handleConfirmSubmit = useCallback(async () => {
+    if (!confirmAction) {
+      return;
+    }
+
+    await handleUpdateStatus(confirmAction.user, confirmAction.status);
+    setConfirmAction(null);
+  }, [confirmAction, handleUpdateStatus]);
+
   const handleAvatarChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -428,6 +481,10 @@ export function UserView() {
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
                       onEditRow={handleOpenEdit}
+                      onBanRow={handleBanUser}
+                      onDeactivateRow={handleDeactivateUser}
+                      onActivateRow={handleActivateUser}
+                      onRecoverRow={handleRecoverUser}
                     />
                   ))}
 
@@ -564,6 +621,30 @@ export function UserView() {
           </Button>
           <Button variant="contained" onClick={handleSaveEdit}>
             Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={!!confirmAction} onClose={handleConfirmClose} fullWidth maxWidth="xs">
+        <DialogTitle>Confirm action</DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography>
+            {confirmAction?.status === 'active'
+              ? 'Activate this user? They will be able to log in again.'
+              : confirmAction?.status === 'banned'
+                ? 'Ban this user? They will no longer be able to log in.'
+                : 'Deactivate this user? They will no longer be able to log in.'}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button color="inherit" onClick={handleConfirmClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color={confirmAction?.status === 'active' ? 'primary' : 'error'}
+            onClick={handleConfirmSubmit}
+          >
+            Confirm
           </Button>
         </DialogActions>
       </Dialog>

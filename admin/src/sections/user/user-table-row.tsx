@@ -34,9 +34,22 @@ type UserTableRowProps = {
   selected: boolean;
   onSelectRow: () => void;
   onEditRow: (user: UserProps) => void;
+  onBanRow: (user: UserProps) => void;
+  onDeactivateRow: (user: UserProps) => void;
+  onActivateRow: (user: UserProps) => void;
+  onRecoverRow: (user: UserProps) => void;
 };
 
-export function UserTableRow({ row, selected, onSelectRow, onEditRow }: UserTableRowProps) {
+export function UserTableRow({
+  row,
+  selected,
+  onSelectRow,
+  onEditRow,
+  onBanRow,
+  onDeactivateRow,
+  onActivateRow,
+  onRecoverRow,
+}: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
 
   const normalizeDigits = (value: string) => value.replace(/\D/g, '');
@@ -98,6 +111,26 @@ export function UserTableRow({ row, selected, onSelectRow, onEditRow }: UserTabl
     onEditRow(row);
   }, [handleClosePopover, onEditRow, row]);
 
+  const handleBan = useCallback(() => {
+    handleClosePopover();
+    onBanRow(row);
+  }, [handleClosePopover, onBanRow, row]);
+
+  const handleDeactivate = useCallback(() => {
+    handleClosePopover();
+    onDeactivateRow(row);
+  }, [handleClosePopover, onDeactivateRow, row]);
+
+  const handleActivate = useCallback(() => {
+    handleClosePopover();
+    onActivateRow(row);
+  }, [handleClosePopover, onActivateRow, row]);
+
+  const handleRecover = useCallback(() => {
+    handleClosePopover();
+    onRecoverRow(row);
+  }, [handleClosePopover, onRecoverRow, row]);
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
@@ -147,7 +180,15 @@ export function UserTableRow({ row, selected, onSelectRow, onEditRow }: UserTabl
         </TableCell>
 
         <TableCell>
-          <Label color={(row.status === 'banned' && 'error') || 'success'}>{row.status}</Label>
+          <Label
+            color={
+              (row.status === 'banned' && 'error') ||
+              (row.status === 'deactivated' && 'warning') ||
+              'success'
+            }
+          >
+            {row.status}
+          </Label>
         </TableCell>
 
         <TableCell align="right">
@@ -185,15 +226,28 @@ export function UserTableRow({ row, selected, onSelectRow, onEditRow }: UserTabl
             Edit
           </MenuItem>
 
-          <MenuItem onClick={handleClosePopover} sx={{ color: 'warning.main' }}>
-            <Iconify icon="solar:eye-closed-bold" />
-            Ban
-          </MenuItem>
-
-          <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem>
+          {row.status === 'banned' ? (
+            <MenuItem onClick={handleRecover} sx={{ color: 'success.main' }}>
+              <Iconify icon="eva:checkmark-fill" />
+              Recover
+            </MenuItem>
+          ) : row.status === 'deactivated' ? (
+            <MenuItem onClick={handleActivate} sx={{ color: 'success.main' }}>
+              <Iconify icon="eva:checkmark-fill" />
+              Activate
+            </MenuItem>
+          ) : (
+            <>
+              <MenuItem onClick={handleBan} sx={{ color: 'warning.main' }}>
+                <Iconify icon="solar:eye-closed-bold" />
+                Ban
+              </MenuItem>
+              <MenuItem onClick={handleDeactivate} sx={{ color: 'error.main' }}>
+                <Iconify icon="solar:restart-bold" />
+                Deactivate
+              </MenuItem>
+            </>
+          )}
         </MenuList>
       </Popover>
     </>
