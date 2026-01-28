@@ -12,6 +12,7 @@ import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { getCountryCode, getCountryCodeFromPhone } from 'src/utils/country';
 
 // ----------------------------------------------------------------------
 
@@ -35,6 +36,46 @@ type UserTableRowProps = {
 
 export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+
+  const phoneCountryCode = getCountryCodeFromPhone(row.phoneNumber);
+  const phoneFlagSrc = phoneCountryCode
+    ? `https://flagcdn.com/w20/${phoneCountryCode.toLowerCase()}.png`
+    : '';
+  const phoneFlagSrcSet = phoneCountryCode
+    ? `https://flagcdn.com/w40/${phoneCountryCode.toLowerCase()}.png 2x`
+    : undefined;
+  const phoneFlag = phoneCountryCode ? (
+    <Box
+      component="img"
+      loading="lazy"
+      width={20}
+      height={14}
+      alt="Phone country flag"
+      src={phoneFlagSrc}
+      srcSet={phoneFlagSrcSet}
+      sx={{ borderRadius: '2px', flexShrink: 0 }}
+    />
+  ) : null;
+
+  const countryCode = getCountryCode(row.country);
+  const countryFlagSrc = countryCode
+    ? `https://flagcdn.com/w20/${countryCode.toLowerCase()}.png`
+    : '';
+  const countryFlagSrcSet = countryCode
+    ? `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png 2x`
+    : undefined;
+  const countryFlag = countryCode ? (
+    <Box
+      component="img"
+      loading="lazy"
+      width={20}
+      height={14}
+      alt={`${row.country} flag`}
+      src={countryFlagSrc}
+      srcSet={countryFlagSrcSet}
+      sx={{ borderRadius: '2px', flexShrink: 0 }}
+    />
+  ) : null;
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -71,9 +112,19 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
           </Box>
         </TableCell>
 
-        <TableCell>{row.phoneNumber || '-'}</TableCell>
+        <TableCell>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {phoneFlag}
+            <Box component="span">{row.phoneNumber || '-'}</Box>
+          </Box>
+        </TableCell>
 
-        <TableCell>{row.country}</TableCell>
+        <TableCell>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {countryFlag}
+            <Box component="span">{row.country}</Box>
+          </Box>
+        </TableCell>
 
         <TableCell>{row.role}</TableCell>
 
