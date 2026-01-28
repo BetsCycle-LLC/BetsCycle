@@ -71,10 +71,22 @@ export function UserView() {
 
   const mockUsersWithType = useMemo(
     () =>
-      _users.map((user, index) => ({
-        ...user,
-        userType: getUserType(user, index),
-      })),
+      _users.map((user, index) => {
+        const mappedUser: UserProps = {
+          id: user.id,
+          name: user.name,
+          role: user.role,
+          status: user.status,
+          country: user.company ?? '-',
+          avatarUrl: user.avatarUrl,
+          isVerified: user.isVerified,
+        };
+
+        return {
+          ...mappedUser,
+          userType: getUserType(mappedUser, index),
+        };
+      }),
     []
   );
 
