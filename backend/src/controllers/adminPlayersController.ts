@@ -74,3 +74,41 @@ export async function listPlayers(req: Request, res: Response) {
   });
 }
 
+export async function updatePlayer(req: Request, res: Response) {
+  const playerId = req.params.playerId;
+
+  if (!playerId) {
+    return res.status(400).json({ message: 'Player id is required.' });
+  }
+
+  const { avatar, email, personalInfo } = req.body ?? {};
+
+  const updates: Record<string, unknown> = {};
+
+  if (email !== undefined) {
+    updates.email = String(email).toLowerCase();
+  }
+
+  if (avatar !== undefined) {
+    updates.avatar = avatar;
+  }
+
+  if (personalInfo) {
+    updates.personalInfo = {
+      firstName: personalInfo.firstName,
+      lastName: personalInfo.lastName,
+      phoneNumber: personalInfo.phoneNumber,
+      country: personalInfo.country,
+      countryCode: personalInfo.countryCode,
+    };
+  }
+
+  const player = await Player.findByIdAndUpdate(playerId, updates, { new: true });
+
+  if (!player) {
+    return res.status(404).json({ message: 'Player not found' });
+  }
+
+  return res.json({ player: sanitizePlayerForAdmin(player) });
+}
+

@@ -19,6 +19,18 @@ export type AdminPlayer = {
   };
 };
 
+export type UpdateAdminPlayerPayload = {
+  email?: string;
+  avatar?: string;
+  personalInfo?: {
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+    country?: string;
+    countryCode?: string;
+  };
+};
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -52,6 +64,16 @@ export function fetchAdminPlayers(token: string, status?: string) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+}
+
+export function updateAdminPlayer(token: string, playerId: string, payload: UpdateAdminPlayerPayload) {
+  return request<{ player: AdminPlayer }>(`/api/admin/players/${playerId}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
   });
 }
 

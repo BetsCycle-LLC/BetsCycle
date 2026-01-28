@@ -55,11 +55,11 @@ export function getComparator<Key extends keyof any>(
 type ApplyFilterProps = {
   inputData: UserProps[];
   filterName: string;
-  filterRole: string;
+  filterStatus: string;
   comparator: (a: any, b: any) => number;
 };
 
-export function applyFilter({ inputData, comparator, filterName, filterRole }: ApplyFilterProps) {
+export function applyFilter({ inputData, comparator, filterName, filterStatus }: ApplyFilterProps) {
   const stabilizedThis = inputData.map((el, index) => [el, index] as const);
 
   stabilizedThis.sort((a, b) => {
@@ -76,8 +76,8 @@ export function applyFilter({ inputData, comparator, filterName, filterRole }: A
     );
   }
 
-  if (filterRole !== 'all') {
-    inputData = inputData.filter((user) => user.role === filterRole);
+  if (filterStatus !== 'all') {
+    inputData = inputData.filter((user) => user.status === filterStatus);
   }
 
   return inputData;

@@ -18,18 +18,18 @@ type UserTableToolbarProps = {
   numSelected: number;
   filterName: string;
   onFilterName: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  filterRole: string;
-  roleOptions: string[];
-  onFilterRole: (event: SelectChangeEvent<string>) => void;
+  filterStatus: string;
+  statusOptions: string[];
+  onFilterStatus: (event: SelectChangeEvent<string>) => void;
 };
 
 export function UserTableToolbar({
   numSelected,
   filterName,
   onFilterName,
-  filterRole,
-  roleOptions,
-  onFilterRole,
+  filterStatus,
+  statusOptions,
+  onFilterStatus,
 }: UserTableToolbarProps) {
   return (
     <Toolbar
@@ -51,16 +51,16 @@ export function UserTableToolbar({
       ) : (
         <Box sx={{ gap: 2, display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
           <FormControl sx={{ minWidth: 180 }}>
-            <InputLabel id="user-role-filter-label">Role</InputLabel>
+            <InputLabel id="user-status-filter-label">Status</InputLabel>
             <Select
-              labelId="user-role-filter-label"
-              value={filterRole}
-              label="Role"
-              onChange={onFilterRole}
+              labelId="user-status-filter-label"
+              value={filterStatus}
+              label="Status"
+              onChange={onFilterStatus}
             >
-              {roleOptions.map((role) => (
-                <MenuItem key={role} value={role}>
-                  {role === 'all' ? 'All' : role}
+              {statusOptions.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status === 'all' ? 'All' : status}
                 </MenuItem>
               ))}
             </Select>

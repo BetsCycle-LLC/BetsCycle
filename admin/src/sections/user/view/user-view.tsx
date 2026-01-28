@@ -20,11 +20,12 @@ import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 
 import AvatarEditor from 'react-avatar-editor';
+import { useSnackbar } from 'notistack';
 
 import { _users } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useAuth } from 'src/auth/use-auth';
-import { fetchAdminPlayers } from 'src/services/player-api';
+import { fetchAdminPlayers, updateAdminPlayer, type AdminPlayer } from 'src/services/player-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -75,9 +76,10 @@ const getUserType = (user: UserProps, index: number): UserTabValue => {
 export function UserView() {
   const table = useTable();
   const { token } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [filterName, setFilterName] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [activeTab, setActiveTab] = useState<UserTabValue>('players');
   const [players, setPlayers] = useState<UserProps[]>([]);
   const [playersLoaded, setPlayersLoaded] = useState(false);
@@ -112,6 +114,27 @@ export function UserView() {
     []
   );
 
+  const mapAdminPlayerToUser = useCallback((player: AdminPlayer): UserProps => {
+    const firstName = player.personalInfo?.firstName?.trim();
+    const lastName = player.personalInfo?.lastName?.trim();
+    const name = [firstName, lastName].filter(Boolean).join(' ') || player.username || player.email;
+    const derivedCountryCode =
+      player.personalInfo?.countryCode ?? getCountryCode(player.personalInfo?.country) ?? undefined;
+
+    return {
+      id: player.id,
+      name,
+      email: player.email,
+      phoneNumber: player.personalInfo?.phoneNumber,
+      countryCode: derivedCountryCode,
+      country: player.personalInfo?.country ?? '-',
+      role: player.playerType === 'staking' ? 'Staker' : 'Player',
+      isVerified: player.verification?.emailVerified ?? false,
+      avatarUrl: player.avatar ?? '',
+      status: player.status ?? 'active',
+    };
+  }, []);
+
   useEffect(() => {
     if (activeTab !== 'players' || !token || playersLoaded || playersLoading) {
       return;
@@ -121,27 +144,9 @@ export function UserView() {
 
     fetchAdminPlayers(token, 'active')
       .then((response) => {
-        const mappedPlayers: UserProps[] = response.players.map((player) => {
-          const firstName = player.personalInfo?.firstName?.trim();
-          const lastName = player.personalInfo?.lastName?.trim();
-          const name =
-            [firstName, lastName].filter(Boolean).join(' ') || player.username || player.email;
-
-          const derivedCountryCode = player.personalInfo?.countryCode ?? getCountryCode(player.personalInfo?.country) ?? undefined;
-
-          return {
-            id: player.id,
-            name,
-            email: player.email,
-            phoneNumber: player.personalInfo?.phoneNumber,
-            countryCode: derivedCountryCode,
-            country: player.personalInfo?.country ?? '-',
-            role: player.playerType === 'staking' ? 'Staker' : 'Player',
-            isVerified: player.verification?.emailVerified ?? false,
-            avatarUrl: player.avatar ?? '',
-            status: player.status ?? 'active',
-          };
-        });
+        const mappedPlayers: UserProps[] = response.players.map((player) =>
+          mapAdminPlayerToUser(player)
+        );
 
         setPlayers(mappedPlayers);
         setPlayersLoaded(true);
@@ -152,7 +157,7 @@ export function UserView() {
       .finally(() => {
         setPlayersLoading(false);
       });
-  }, [activeTab, token, playersLoaded, playersLoading]);
+  }, [activeTab, mapAdminPlayerToUser, playersLoaded, playersLoading, token]);
 
   const usersInTab = useMemo(
     () =>
@@ -177,8 +182,8 @@ export function UserView() {
     [mockUsersWithType, players]
   );
 
-  const roleOptions = useMemo(
-    () => ['all', ...Array.from(new Set(usersInTab.map((user) => user.role)))],
+  const statusOptions = useMemo(
+    () => ['all', ...Array.from(new Set(usersInTab.map((user) => user.status)))],
     [usersInTab]
   );
 
@@ -186,7 +191,7 @@ export function UserView() {
     inputData: usersInTab,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
-    filterRole,
+    filterStatus,
   });
 
   const notFound = !dataFiltered.length && !!filterName;
@@ -220,28 +225,67 @@ export function UserView() {
     []
   );
 
-  const handleSaveEdit = useCallback(() => {
+  const handleSaveEdit = useCallback(async () => {
     if (!editValues) {
       return;
     }
 
-    const fullName = [editFirstName, editLastName].filter(Boolean).join(' ').trim();
-    const updatedUser: UserProps = {
-      ...editValues,
-      name: fullName || editValues.name,
-    };
-
-    if (avatarSource && avatarEdited && avatarEditorRef.current) {
-      updatedUser.avatarUrl = avatarEditorRef.current
-        .getImageScaledToCanvas()
-        .toDataURL('image/png');
-    } else if (!avatarSource) {
-      updatedUser.avatarUrl = '';
+    if (!token) {
+      enqueueSnackbar('Unable to update user. Please sign in again.', { variant: 'error' });
+      return;
     }
 
-    setPlayers((prev) => prev.map((user) => (user.id === updatedUser.id ? updatedUser : user)));
-    handleCloseEdit();
-  }, [avatarEdited, avatarSource, editFirstName, editLastName, editValues, handleCloseEdit]);
+    const fullName = [editFirstName, editLastName].filter(Boolean).join(' ').trim();
+    let nextAvatar = editValues.avatarUrl;
+
+    if (avatarSource && avatarEdited) {
+      if (avatarEditorRef.current) {
+        nextAvatar = avatarEditorRef.current.getImageScaledToCanvas().toDataURL('image/png');
+      } else if (typeof avatarSource === 'string') {
+        nextAvatar = avatarSource;
+      }
+    } else if (!avatarSource) {
+      nextAvatar = '';
+    }
+
+    try {
+      const response = await updateAdminPlayer(token, editValues.id, {
+        email: editValues.email,
+        avatar: nextAvatar,
+        personalInfo: {
+          firstName: editFirstName.trim() || undefined,
+          lastName: editLastName.trim() || undefined,
+          phoneNumber: editValues.phoneNumber?.trim() || undefined,
+          country: editValues.country?.trim() || undefined,
+          countryCode:
+            editValues.countryCode ?? getCountryCode(editValues.country) ?? undefined,
+        },
+      });
+
+      const updatedUser = mapAdminPlayerToUser(response.player);
+      const mergedUser: UserProps = {
+        ...updatedUser,
+        name: fullName || updatedUser.name,
+      };
+
+      setPlayers((prev) => prev.map((user) => (user.id === mergedUser.id ? mergedUser : user)));
+      handleCloseEdit();
+      enqueueSnackbar('User updated successfully.', { variant: 'success' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to update user.';
+      enqueueSnackbar(message, { variant: 'error' });
+    }
+  }, [
+    avatarEdited,
+    avatarSource,
+    editFirstName,
+    editLastName,
+    editValues,
+    enqueueSnackbar,
+    handleCloseEdit,
+    mapAdminPlayerToUser,
+    token,
+  ]);
 
   const handleAvatarChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -250,8 +294,15 @@ export function UserView() {
       return;
     }
 
-    setAvatarSource(file);
-    setAvatarEdited(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result;
+      if (typeof result === 'string') {
+        setAvatarSource(result);
+        setAvatarEdited(true);
+      }
+    };
+    reader.readAsDataURL(file);
     event.target.value = '';
   }, []);
 
@@ -267,7 +318,11 @@ export function UserView() {
   );
 
   const handleCountryChange = useCallback((value: CountryOption | null) => {
-    setEditValues((prev) => (prev ? { ...prev, country: value?.label ?? '' } : prev));
+    setEditValues((prev) =>
+      prev
+        ? { ...prev, country: value?.label ?? '', countryCode: value?.code ?? undefined }
+        : prev
+    );
   }, []);
 
   return (
@@ -296,7 +351,7 @@ export function UserView() {
           value={activeTab}
           onChange={(_, value: UserTabValue) => {
             setActiveTab(value);
-            setFilterRole('all');
+            setFilterStatus('all');
             table.onResetPage();
             table.onResetSelected();
           }}
@@ -327,10 +382,10 @@ export function UserView() {
             setFilterName(event.target.value);
             table.onResetPage();
           }}
-          filterRole={filterRole}
-          roleOptions={roleOptions}
-          onFilterRole={(event) => {
-            setFilterRole(event.target.value);
+          filterStatus={filterStatus}
+          statusOptions={statusOptions}
+          onFilterStatus={(event) => {
+            setFilterStatus(event.target.value);
             table.onResetPage();
           }}
         />
