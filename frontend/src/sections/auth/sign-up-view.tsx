@@ -5,7 +5,6 @@ import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Avatar from '@mui/material/Avatar';
-import Autocomplete from '@mui/material/Autocomplete';
 import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -16,9 +15,15 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { MuiTelInput, type MuiTelInputInfo } from 'mui-tel-input';
 
 import { useRouter } from 'src/routes/hooks';
 
+import {
+  CountrySelect,
+  getCountryOptionByCode,
+  type CountryOption,
+} from 'src/components/country-select';
 import { Iconify } from 'src/components/iconify';
 import { useAuth } from 'src/auth/use-auth';
 import { updateProfile, verifyEmail } from 'src/services/auth-api';
@@ -48,9 +53,26 @@ export function SignUpView() {
   const [lastName, setLastName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Dayjs | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [country, setCountry] = useState<string | null>(null);
+  const [country, setCountry] = useState<CountryOption | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  const handlePhoneChange = useCallback(
+    (value: string, info: MuiTelInputInfo) => {
+      setPhoneNumber(value);
+
+      if (!info.countryCode) {
+        return;
+      }
+
+      const matchedCountry = getCountryOptionByCode(info.countryCode);
+
+      if (matchedCountry && matchedCountry.code !== country?.code) {
+        setCountry(matchedCountry);
+      }
+    },
+    [country?.code],
+  );
 
   const handleSignUp = useCallback(async () => {
     setErrorMessage('');
@@ -131,7 +153,8 @@ export function SignUpView() {
           lastName,
           dateOfBirth: dateOfBirth ? dayjs(dateOfBirth).toDate().toISOString() : undefined,
           phoneNumber: phoneNumber || undefined,
-          country,
+          country: country?.label,
+          countryCode: country?.code,
         },
       });
 
@@ -403,210 +426,17 @@ export function SignUpView() {
                   }}
                 />
               </LocalizationProvider>
-              <TextField
+              <MuiTelInput
                 fullWidth
                 name="phoneNumber"
                 label="Phone number"
                 value={phoneNumber}
-                onChange={(event) => setPhoneNumber(event.target.value)}
+                onChange={handlePhoneChange}
               />
             </Box>
-            <Autocomplete
-              options={[
-                'Afghanistan',
-                'Albania',
-                'Algeria',
-                'Andorra',
-                'Angola',
-                'Argentina',
-                'Armenia',
-                'Australia',
-                'Austria',
-                'Azerbaijan',
-                'Bahamas',
-                'Bahrain',
-                'Bangladesh',
-                'Barbados',
-                'Belarus',
-                'Belgium',
-                'Belize',
-                'Benin',
-                'Bhutan',
-                'Bolivia',
-                'Bosnia and Herzegovina',
-                'Botswana',
-                'Brazil',
-                'Brunei',
-                'Bulgaria',
-                'Burkina Faso',
-                'Burundi',
-                'Cambodia',
-                'Cameroon',
-                'Canada',
-                'Cape Verde',
-                'Central African Republic',
-                'Chad',
-                'Chile',
-                'China',
-                'Colombia',
-                'Comoros',
-                'Congo',
-                'Costa Rica',
-                "Cote d'Ivoire",
-                'Croatia',
-                'Cuba',
-                'Cyprus',
-                'Czech Republic',
-                'Denmark',
-                'Djibouti',
-                'Dominica',
-                'Dominican Republic',
-                'Ecuador',
-                'Egypt',
-                'El Salvador',
-                'Equatorial Guinea',
-                'Eritrea',
-                'Estonia',
-                'Eswatini',
-                'Ethiopia',
-                'Fiji',
-                'Finland',
-                'France',
-                'Gabon',
-                'Gambia',
-                'Georgia',
-                'Germany',
-                'Ghana',
-                'Greece',
-                'Grenada',
-                'Guatemala',
-                'Guinea',
-                'Guinea-Bissau',
-                'Guyana',
-                'Haiti',
-                'Honduras',
-                'Hungary',
-                'Iceland',
-                'India',
-                'Indonesia',
-                'Iran',
-                'Iraq',
-                'Ireland',
-                'Israel',
-                'Italy',
-                'Jamaica',
-                'Japan',
-                'Jordan',
-                'Kazakhstan',
-                'Kenya',
-                'Kiribati',
-                'Kuwait',
-                'Kyrgyzstan',
-                'Laos',
-                'Latvia',
-                'Lebanon',
-                'Lesotho',
-                'Liberia',
-                'Libya',
-                'Liechtenstein',
-                'Lithuania',
-                'Luxembourg',
-                'Madagascar',
-                'Malawi',
-                'Malaysia',
-                'Maldives',
-                'Mali',
-                'Malta',
-                'Marshall Islands',
-                'Mauritania',
-                'Mauritius',
-                'Mexico',
-                'Moldova',
-                'Monaco',
-                'Mongolia',
-                'Montenegro',
-                'Morocco',
-                'Mozambique',
-                'Myanmar',
-                'Namibia',
-                'Nauru',
-                'Nepal',
-                'Netherlands',
-                'New Zealand',
-                'Nicaragua',
-                'Niger',
-                'Nigeria',
-                'North Korea',
-                'North Macedonia',
-                'Norway',
-                'Oman',
-                'Pakistan',
-                'Palau',
-                'Panama',
-                'Papua New Guinea',
-                'Paraguay',
-                'Peru',
-                'Philippines',
-                'Poland',
-                'Portugal',
-                'Qatar',
-                'Romania',
-                'Russia',
-                'Rwanda',
-                'Saint Kitts and Nevis',
-                'Saint Lucia',
-                'Saint Vincent and the Grenadines',
-                'Samoa',
-                'San Marino',
-                'Sao Tome and Principe',
-                'Saudi Arabia',
-                'Senegal',
-                'Serbia',
-                'Seychelles',
-                'Sierra Leone',
-                'Singapore',
-                'Slovakia',
-                'Slovenia',
-                'Solomon Islands',
-                'Somalia',
-                'South Africa',
-                'South Korea',
-                'South Sudan',
-                'Spain',
-                'Sri Lanka',
-                'Sudan',
-                'Suriname',
-                'Sweden',
-                'Switzerland',
-                'Syria',
-                'Taiwan',
-                'Tajikistan',
-                'Tanzania',
-                'Thailand',
-                'Togo',
-                'Tonga',
-                'Trinidad and Tobago',
-                'Tunisia',
-                'Turkey',
-                'Turkmenistan',
-                'Tuvalu',
-                'Uganda',
-                'Ukraine',
-                'United Arab Emirates',
-                'United Kingdom',
-                'United States',
-                'Uruguay',
-                'Uzbekistan',
-                'Vanuatu',
-                'Vatican City',
-                'Venezuela',
-                'Vietnam',
-                'Yemen',
-                'Zambia',
-                'Zimbabwe',
-              ]}
+            <CountrySelect
               value={country}
-              onChange={(_event, value) => setCountry(value)}
+              onChange={setCountry}
               slotProps={{
                 paper: {
                   sx: (theme) => ({
@@ -614,9 +444,6 @@ export function SignUpView() {
                   }),
                 },
               }}
-              renderInput={(params) => (
-                <TextField {...params} name="country" label="Country" />
-              )}
             />
             <Button
               fullWidth

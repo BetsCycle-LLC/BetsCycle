@@ -12,15 +12,19 @@ import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { getCountryCode, getCountryOptionByCode } from 'src/utils/country';
 
 // ----------------------------------------------------------------------
 
 export type UserProps = {
   id: string;
   name: string;
+  email?: string;
+  phoneNumber?: string;
+  countryCode?: string;
   role: string;
   status: string;
-  company: string;
+  country: string;
   avatarUrl: string;
   isVerified: boolean;
 };
@@ -29,10 +33,70 @@ type UserTableRowProps = {
   row: UserProps;
   selected: boolean;
   onSelectRow: () => void;
+  onEditRow: (user: UserProps) => void;
+  onBanRow: (user: UserProps) => void;
+  onDeactivateRow: (user: UserProps) => void;
+  onActivateRow: (user: UserProps) => void;
+  onRecoverRow: (user: UserProps) => void;
 };
 
-export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+export function UserTableRow({
+  row,
+  selected,
+  onSelectRow,
+  onEditRow,
+  onBanRow,
+  onDeactivateRow,
+  onActivateRow,
+  onRecoverRow,
+}: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+
+  const normalizeDigits = (value: string) => value.replace(/\D/g, '');
+
+  const formatPhoneNumber = (value?: string, countryCode?: string) => {
+    if (!value) {
+      return '-';
+    }
+
+    if (value.trim().startsWith('+')) {
+      return value;
+    }
+
+    const normalizedNumber = normalizeDigits(value);
+    const countryOption = getCountryOptionByCode(countryCode);
+    const dialingDigits = countryOption ? normalizeDigits(countryOption.phone) : '';
+
+    if (!dialingDigits || !normalizedNumber) {
+      return value;
+    }
+
+    if (normalizedNumber.startsWith(dialingDigits)) {
+      return `+${normalizedNumber}`;
+    }
+
+    return `+${dialingDigits}${normalizedNumber}`;
+  };
+
+  const countryCode = getCountryCode(row.country);
+  const countryFlagSrc = countryCode
+    ? `https://flagcdn.com/w20/${countryCode.toLowerCase()}.png`
+    : '';
+  const countryFlagSrcSet = countryCode
+    ? `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png 2x`
+    : undefined;
+  const countryFlag = countryCode ? (
+    <Box
+      component="img"
+      loading="lazy"
+      width={20}
+      height={14}
+      alt={`${row.country} flag`}
+      src={countryFlagSrc}
+      srcSet={countryFlagSrcSet}
+      sx={{ borderRadius: '2px', flexShrink: 0 }}
+    />
+  ) : null;
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -41,6 +105,31 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
   const handleClosePopover = useCallback(() => {
     setOpenPopover(null);
   }, []);
+
+  const handleEdit = useCallback(() => {
+    handleClosePopover();
+    onEditRow(row);
+  }, [handleClosePopover, onEditRow, row]);
+
+  const handleBan = useCallback(() => {
+    handleClosePopover();
+    onBanRow(row);
+  }, [handleClosePopover, onBanRow, row]);
+
+  const handleDeactivate = useCallback(() => {
+    handleClosePopover();
+    onDeactivateRow(row);
+  }, [handleClosePopover, onDeactivateRow, row]);
+
+  const handleActivate = useCallback(() => {
+    handleClosePopover();
+    onActivateRow(row);
+  }, [handleClosePopover, onActivateRow, row]);
+
+  const handleRecover = useCallback(() => {
+    handleClosePopover();
+    onRecoverRow(row);
+  }, [handleClosePopover, onRecoverRow, row]);
 
   return (
     <>
@@ -58,11 +147,27 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             }}
           >
             <Avatar alt={row.name} src={row.avatarUrl} />
-            {row.name}
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Box component="span">{row.name}</Box>
+              {row.email && (
+                <Box component="span" sx={{ color: 'text.secondary', typography: 'caption' }}>
+                  {row.email}
+                </Box>
+              )}
+            </Box>
           </Box>
         </TableCell>
 
-        <TableCell>{row.company}</TableCell>
+        <TableCell>
+          <Box component="span">{formatPhoneNumber(row.phoneNumber, row.countryCode)}</Box>
+        </TableCell>
+
+        <TableCell>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {countryFlag}
+            <Box component="span">{row.country}</Box>
+          </Box>
+        </TableCell>
 
         <TableCell>{row.role}</TableCell>
 
@@ -75,7 +180,15 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         </TableCell>
 
         <TableCell>
-          <Label color={(row.status === 'banned' && 'error') || 'success'}>{row.status}</Label>
+          <Label
+            color={
+              (row.status === 'banned' && 'error') ||
+              (row.status === 'deactivated' && 'warning') ||
+              'success'
+            }
+          >
+            {row.status}
+          </Label>
         </TableCell>
 
         <TableCell align="right">
@@ -108,15 +221,33 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             },
           }}
         >
-          <MenuItem onClick={handleClosePopover}>
+          <MenuItem onClick={handleEdit}>
             <Iconify icon="solar:pen-bold" />
             Edit
           </MenuItem>
 
-          <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem>
+          {row.status === 'banned' ? (
+            <MenuItem onClick={handleRecover} sx={{ color: 'success.main' }}>
+              <Iconify icon="eva:checkmark-fill" />
+              Recover
+            </MenuItem>
+          ) : row.status === 'deactivated' ? (
+            <MenuItem onClick={handleActivate} sx={{ color: 'success.main' }}>
+              <Iconify icon="eva:checkmark-fill" />
+              Activate
+            </MenuItem>
+          ) : (
+            <>
+              <MenuItem onClick={handleBan} sx={{ color: 'warning.main' }}>
+                <Iconify icon="solar:eye-closed-bold" />
+                Ban
+              </MenuItem>
+              <MenuItem onClick={handleDeactivate} sx={{ color: 'error.main' }}>
+                <Iconify icon="solar:restart-bold" />
+                Deactivate
+              </MenuItem>
+            </>
+          )}
         </MenuList>
       </Popover>
     </>

@@ -97,6 +97,16 @@ export async function login(req: Request, res: Response) {
     return res.status(401).json({ message: 'Invalid credentials.' });
   }
 
+  if (player.status !== 'active') {
+    if (player.status === 'banned') {
+      return res.status(403).json({ message: 'Account is banned.' });
+    }
+    if (player.status === 'deactivated') {
+      return res.status(403).json({ message: 'Account is deactivated.' });
+    }
+    return res.status(403).json({ message: 'Account is not active.' });
+  }
+
   if (!player.verification?.emailVerified) {
     return res.status(403).json({ message: 'Email not verified.' });
   }
@@ -189,6 +199,7 @@ export async function updateProfile(req: Request, res: Response) {
       dateOfBirth: personalInfo.dateOfBirth ? new Date(personalInfo.dateOfBirth) : undefined,
       phoneNumber: personalInfo.phoneNumber,
       country: personalInfo.country,
+      countryCode: personalInfo.countryCode,
     };
   }
 

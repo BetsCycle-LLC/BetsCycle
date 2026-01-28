@@ -68,6 +68,7 @@ export const routesSection: RouteObject[] = [
       { path: 'wallet', element: <WalletPage /> },
       { path: 'support', element: <SupportPage /> },
       { path: 'user', element: <UserPage /> },
+      { path: 'admin/users', element: <UserPage /> },
     ],
   },
   {

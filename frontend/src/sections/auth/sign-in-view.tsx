@@ -29,6 +29,19 @@ export function SignInView() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const resolveErrorMessage = (error: unknown) => {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+      return error.message;
+    }
+    return 'Unable to sign in';
+  };
+
   const handleSignIn = useCallback(async () => {
     setErrorMessage('');
     setIsSubmitting(true);
@@ -39,7 +52,7 @@ export function SignInView() {
       router.push('/');
       closeAuthDialog();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to sign in';
+      const message = resolveErrorMessage(error);
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
