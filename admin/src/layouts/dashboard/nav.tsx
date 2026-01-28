@@ -452,10 +452,10 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
           href={item.path}
           sx={[
             (theme) => ({
-              pl: 2,
-              py: 0.75,
+              pl: 1.5,
+              py: 0.5,
+              pr: 1,
               gap: 1.5,
-              pr: 1.5,
               borderRadius: 1,
               typography: 'body2',
               fontSize: 13,
@@ -491,8 +491,8 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
             component="span"
             className="nav-item-icon"
             sx={{
-              width: 22,
-              height: 22,
+              width: 24,
+              height: 24,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
