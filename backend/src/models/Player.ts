@@ -24,6 +24,7 @@ const personalInfoSchema = new Schema(
     dateOfBirth: { type: Date },
     phoneNumber: { type: String },
     country: { type: String },
+    countryCode: { type: String },
   },
   { _id: false },
 );

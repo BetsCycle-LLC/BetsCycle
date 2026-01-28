@@ -16,7 +16,7 @@ type CountrySelectProps = {
   slotProps?: AutocompleteProps<CountryOption, false, false, false>['slotProps'];
 };
 
-const COUNTRY_OPTIONS: CountryOption[] = [
+export const COUNTRY_OPTIONS: CountryOption[] = [
   { code: 'AD', label: 'Andorra', phone: '376' },
   { code: 'AE', label: 'United Arab Emirates', phone: '971' },
   { code: 'AF', label: 'Afghanistan', phone: '93' },
@@ -322,5 +322,19 @@ export function CountrySelect({ value, onChange, slotProps }: CountrySelectProps
       )}
     />
   );
+}
+
+export function getCountryOptionByCode(code?: string | null): CountryOption | null {
+  if (!code) {
+    return null;
+  }
+
+  const normalized = code.trim().toUpperCase();
+
+  if (!normalized) {
+    return null;
+  }
+
+  return COUNTRY_OPTIONS.find((option) => option.code === normalized) ?? null;
 }
 

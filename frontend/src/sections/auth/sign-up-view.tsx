@@ -15,11 +15,15 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { MuiTelInput } from 'mui-tel-input';
+import { MuiTelInput, type MuiTelInputInfo } from 'mui-tel-input';
 
 import { useRouter } from 'src/routes/hooks';
 
-import { CountrySelect, type CountryOption } from 'src/components/country-select';
+import {
+  CountrySelect,
+  getCountryOptionByCode,
+  type CountryOption,
+} from 'src/components/country-select';
 import { Iconify } from 'src/components/iconify';
 import { useAuth } from 'src/auth/use-auth';
 import { updateProfile, verifyEmail } from 'src/services/auth-api';
@@ -52,6 +56,23 @@ export function SignUpView() {
   const [country, setCountry] = useState<CountryOption | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  const handlePhoneChange = useCallback(
+    (value: string, info: MuiTelInputInfo) => {
+      setPhoneNumber(value);
+
+      if (!info.countryCode) {
+        return;
+      }
+
+      const matchedCountry = getCountryOptionByCode(info.countryCode);
+
+      if (matchedCountry && matchedCountry.code !== country?.code) {
+        setCountry(matchedCountry);
+      }
+    },
+    [country?.code],
+  );
 
   const handleSignUp = useCallback(async () => {
     setErrorMessage('');
@@ -133,6 +154,7 @@ export function SignUpView() {
           dateOfBirth: dateOfBirth ? dayjs(dateOfBirth).toDate().toISOString() : undefined,
           phoneNumber: phoneNumber || undefined,
           country: country?.label,
+          countryCode: country?.code,
         },
       });
 
@@ -409,7 +431,7 @@ export function SignUpView() {
                 name="phoneNumber"
                 label="Phone number"
                 value={phoneNumber}
-                onChange={setPhoneNumber}
+                onChange={handlePhoneChange}
               />
             </Box>
             <CountrySelect

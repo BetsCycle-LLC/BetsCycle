@@ -15,6 +15,7 @@ type AdminPlayerResponse = {
     lastName?: string;
     phoneNumber?: string;
     country?: string;
+    countryCode?: string;
   };
   verification: {
     emailVerified: boolean;
@@ -35,6 +36,7 @@ function sanitizePlayerForAdmin(player: {
     lastName?: string;
     phoneNumber?: string;
     country?: string;
+    countryCode?: string;
   };
   verification?: {
     emailVerified?: boolean;

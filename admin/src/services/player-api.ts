@@ -11,6 +11,7 @@ export type AdminPlayer = {
     lastName?: string;
     phoneNumber?: string;
     country?: string;
+    countryCode?: string;
   };
   verification: {
     emailVerified: boolean;

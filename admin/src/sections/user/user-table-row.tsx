@@ -12,7 +12,7 @@ import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { getCountryCode, getCountryCodeFromPhone } from 'src/utils/country';
+import { getCountryCode, getCountryOptionByCode } from 'src/utils/country';
 
 // ----------------------------------------------------------------------
 
@@ -21,6 +21,7 @@ export type UserProps = {
   name: string;
   email?: string;
   phoneNumber?: string;
+  countryCode?: string;
   role: string;
   status: string;
   country: string;
@@ -32,30 +33,37 @@ type UserTableRowProps = {
   row: UserProps;
   selected: boolean;
   onSelectRow: () => void;
+  onEditRow: (user: UserProps) => void;
 };
 
-export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+export function UserTableRow({ row, selected, onSelectRow, onEditRow }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
 
-  const phoneCountryCode = getCountryCodeFromPhone(row.phoneNumber);
-  const phoneFlagSrc = phoneCountryCode
-    ? `https://flagcdn.com/w20/${phoneCountryCode.toLowerCase()}.png`
-    : '';
-  const phoneFlagSrcSet = phoneCountryCode
-    ? `https://flagcdn.com/w40/${phoneCountryCode.toLowerCase()}.png 2x`
-    : undefined;
-  const phoneFlag = phoneCountryCode ? (
-    <Box
-      component="img"
-      loading="lazy"
-      width={20}
-      height={14}
-      alt="Phone country flag"
-      src={phoneFlagSrc}
-      srcSet={phoneFlagSrcSet}
-      sx={{ borderRadius: '2px', flexShrink: 0 }}
-    />
-  ) : null;
+  const normalizeDigits = (value: string) => value.replace(/\D/g, '');
+
+  const formatPhoneNumber = (value?: string, countryCode?: string) => {
+    if (!value) {
+      return '-';
+    }
+
+    if (value.trim().startsWith('+')) {
+      return value;
+    }
+
+    const normalizedNumber = normalizeDigits(value);
+    const countryOption = getCountryOptionByCode(countryCode);
+    const dialingDigits = countryOption ? normalizeDigits(countryOption.phone) : '';
+
+    if (!dialingDigits || !normalizedNumber) {
+      return value;
+    }
+
+    if (normalizedNumber.startsWith(dialingDigits)) {
+      return `+${normalizedNumber}`;
+    }
+
+    return `+${dialingDigits}${normalizedNumber}`;
+  };
 
   const countryCode = getCountryCode(row.country);
   const countryFlagSrc = countryCode
@@ -85,6 +93,11 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
     setOpenPopover(null);
   }, []);
 
+  const handleEdit = useCallback(() => {
+    handleClosePopover();
+    onEditRow(row);
+  }, [handleClosePopover, onEditRow, row]);
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
@@ -113,10 +126,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         </TableCell>
 
         <TableCell>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {phoneFlag}
-            <Box component="span">{row.phoneNumber || '-'}</Box>
-          </Box>
+          <Box component="span">{formatPhoneNumber(row.phoneNumber, row.countryCode)}</Box>
         </TableCell>
 
         <TableCell>
@@ -170,9 +180,14 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             },
           }}
         >
-          <MenuItem onClick={handleClosePopover}>
+          <MenuItem onClick={handleEdit}>
             <Iconify icon="solar:pen-bold" />
             Edit
+          </MenuItem>
+
+          <MenuItem onClick={handleClosePopover} sx={{ color: 'warning.main' }}>
+            <Iconify icon="solar:eye-closed-bold" />
+            Ban
           </MenuItem>
 
           <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>

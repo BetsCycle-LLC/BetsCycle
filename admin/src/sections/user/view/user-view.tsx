@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -6,11 +6,20 @@ import Divider from '@mui/material/Divider';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Table from '@mui/material/Table';
+import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import Slider from '@mui/material/Slider';
 import TableBody from '@mui/material/TableBody';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
+
+import AvatarEditor from 'react-avatar-editor';
 
 import { _users } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -20,6 +29,11 @@ import { fetchAdminPlayers } from 'src/services/player-api';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { CountrySelect } from 'src/components/country-select';
+
+import { getCountryCode, getCountryOptionByLabel } from 'src/utils/country';
+
+import type { CountryOption } from 'src/utils/country';
 
 import { TableNoData } from '../table-no-data';
 import { UserTableRow } from '../user-table-row';
@@ -68,6 +82,14 @@ export function UserView() {
   const [players, setPlayers] = useState<UserProps[]>([]);
   const [playersLoaded, setPlayersLoaded] = useState(false);
   const [playersLoading, setPlayersLoading] = useState(false);
+  const [editUser, setEditUser] = useState<UserProps | null>(null);
+  const [editValues, setEditValues] = useState<UserProps | null>(null);
+  const [avatarSource, setAvatarSource] = useState<File | string | null>(null);
+  const [avatarScale, setAvatarScale] = useState(1.1);
+  const [avatarEdited, setAvatarEdited] = useState(false);
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const avatarEditorRef = useRef<any>(null);
 
   const mockUsersWithType = useMemo(
     () =>
@@ -105,11 +127,14 @@ export function UserView() {
           const name =
             [firstName, lastName].filter(Boolean).join(' ') || player.username || player.email;
 
+          const derivedCountryCode = player.personalInfo?.countryCode ?? getCountryCode(player.personalInfo?.country) ?? undefined;
+
           return {
             id: player.id,
             name,
             email: player.email,
             phoneNumber: player.personalInfo?.phoneNumber,
+            countryCode: derivedCountryCode,
             country: player.personalInfo?.country ?? '-',
             role: player.playerType === 'staking' ? 'Staker' : 'Player',
             isVerified: player.verification?.emailVerified ?? false,
@@ -165,6 +190,85 @@ export function UserView() {
   });
 
   const notFound = !dataFiltered.length && !!filterName;
+
+  const handleOpenEdit = useCallback((user: UserProps) => {
+    setEditUser(user);
+    setEditValues(user);
+    const nameParts = user.name.trim().split(/\s+/);
+    setEditFirstName(nameParts[0] ?? '');
+    setEditLastName(nameParts.slice(1).join(' '));
+    setAvatarSource(user.avatarUrl || null);
+    setAvatarScale(1.1);
+    setAvatarEdited(false);
+  }, []);
+
+  const handleCloseEdit = useCallback(() => {
+    setEditUser(null);
+    setEditValues(null);
+    setEditFirstName('');
+    setEditLastName('');
+    setAvatarSource(null);
+    setAvatarEdited(false);
+  }, []);
+
+  const handleEditChange = useCallback(
+    (field: keyof UserProps) =>
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        setEditValues((prev) => (prev ? { ...prev, [field]: value } : prev));
+      },
+    []
+  );
+
+  const handleSaveEdit = useCallback(() => {
+    if (!editValues) {
+      return;
+    }
+
+    const fullName = [editFirstName, editLastName].filter(Boolean).join(' ').trim();
+    const updatedUser: UserProps = {
+      ...editValues,
+      name: fullName || editValues.name,
+    };
+
+    if (avatarSource && avatarEdited && avatarEditorRef.current) {
+      updatedUser.avatarUrl = avatarEditorRef.current
+        .getImageScaledToCanvas()
+        .toDataURL('image/png');
+    } else if (!avatarSource) {
+      updatedUser.avatarUrl = '';
+    }
+
+    setPlayers((prev) => prev.map((user) => (user.id === updatedUser.id ? updatedUser : user)));
+    handleCloseEdit();
+  }, [avatarEdited, avatarSource, editFirstName, editLastName, editValues, handleCloseEdit]);
+
+  const handleAvatarChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setAvatarSource(file);
+    setAvatarEdited(true);
+    event.target.value = '';
+  }, []);
+
+  const handleAvatarRemove = useCallback(() => {
+    setAvatarSource(null);
+    setAvatarEdited(true);
+    setEditValues((prev) => (prev ? { ...prev, avatarUrl: '' } : prev));
+  }, []);
+
+  const countryOption = useMemo(
+    () => getCountryOptionByLabel(editValues?.country ?? null),
+    [editValues?.country]
+  );
+
+  const handleCountryChange = useCallback((value: CountryOption | null) => {
+    setEditValues((prev) => (prev ? { ...prev, country: value?.label ?? '' } : prev));
+  }, []);
 
   return (
     <DashboardContent maxWidth="xl">
@@ -268,6 +372,7 @@ export function UserView() {
                       row={row}
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
+                      onEditRow={handleOpenEdit}
                     />
                   ))}
 
@@ -292,6 +397,121 @@ export function UserView() {
           onRowsPerPageChange={table.onChangeRowsPerPage}
         />
       </Card>
+
+      <Dialog open={!!editUser} onClose={handleCloseEdit} fullWidth maxWidth="sm">
+        <DialogTitle>Edit user</DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Box sx={{ display: 'grid', gap: 2, mt: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+              {avatarSource ? (
+                <AvatarEditor
+                  ref={avatarEditorRef}
+                  image={avatarSource}
+                  width={120}
+                  height={120}
+                  border={12}
+                  borderRadius={60}
+                  color={[0, 0, 0, 0.6]}
+                  scale={avatarScale}
+                />
+              ) : (
+                <Avatar
+                  src={editValues?.avatarUrl ?? ''}
+                  alt={editValues?.name ?? 'User avatar'}
+                  sx={{ width: 120, height: 120 }}
+                />
+              )}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<Iconify icon="solar:pen-bold" />}
+                >
+                  Upload avatar
+                  <input hidden accept="image/*" type="file" onChange={handleAvatarChange} />
+                </Button>
+                <Button
+                  color="inherit"
+                  variant="text"
+                  onClick={handleAvatarRemove}
+                  disabled={!avatarSource && !editValues?.avatarUrl}
+                >
+                  Remove
+                </Button>
+              </Box>
+            </Box>
+            <Box sx={{ px: 0.5 }}>
+              <Slider
+                value={avatarScale}
+                min={1}
+                max={3}
+                step={0.05}
+                onChange={(_, value) => {
+                  const next = Array.isArray(value) ? value[0] : value;
+                  setAvatarScale(next);
+                  setAvatarEdited(true);
+                }}
+                disabled={!avatarSource}
+              />
+            </Box>
+            <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+              <TextField
+                fullWidth
+                label="First Name"
+                value={editFirstName}
+                onChange={(event) => setEditFirstName(event.target.value)}
+              />
+              <TextField
+                fullWidth
+                label="Last Name"
+                value={editLastName}
+                onChange={(event) => setEditLastName(event.target.value)}
+              />
+            </Box>
+            <TextField
+              fullWidth
+              label="Email"
+              value={editValues?.email ?? ''}
+              onChange={handleEditChange('email')}
+            />
+            <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+              <TextField
+                fullWidth
+                label="Phone number"
+                value={editValues?.phoneNumber ?? ''}
+                onChange={handleEditChange('phoneNumber')}
+              />
+              <CountrySelect
+                value={countryOption}
+                onChange={handleCountryChange}
+                label="Country"
+              />
+            </Box>
+            <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+              <TextField
+                fullWidth
+                label="Role"
+                value={editValues?.role ?? ''}
+                disabled
+              />
+              <TextField
+                fullWidth
+                label="Status"
+                value={editValues?.status ?? ''}
+                disabled
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button color="inherit" onClick={handleCloseEdit}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleSaveEdit}>
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </DashboardContent>
   );
 }

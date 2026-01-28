@@ -189,6 +189,7 @@ export async function updateProfile(req: Request, res: Response) {
       dateOfBirth: personalInfo.dateOfBirth ? new Date(personalInfo.dateOfBirth) : undefined,
       phoneNumber: personalInfo.phoneNumber,
       country: personalInfo.country,
+      countryCode: personalInfo.countryCode,
     };
   }
 

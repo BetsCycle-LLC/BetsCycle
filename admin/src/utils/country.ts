@@ -276,6 +276,34 @@ export function getCountryCode(country?: string | null): string | null {
   return match?.code ?? null;
 }
 
+export function getCountryOptionByCode(code?: string | null): CountryOption | null {
+  if (!code) {
+    return null;
+  }
+
+  const normalized = code.trim().toUpperCase();
+
+  if (!normalized) {
+    return null;
+  }
+
+  return COUNTRY_OPTIONS.find((option) => option.code === normalized) ?? null;
+}
+
+export function getCountryOptionByLabel(label?: string | null): CountryOption | null {
+  if (!label) {
+    return null;
+  }
+
+  const normalized = label.trim().toLowerCase();
+
+  if (!normalized || normalized === '-') {
+    return null;
+  }
+
+  return COUNTRY_OPTIONS.find((option) => option.label.toLowerCase() === normalized) ?? null;
+}
+
 export function getCountryCodeFromPhone(phoneNumber?: string | null): string | null {
   if (!phoneNumber) {
     return null;

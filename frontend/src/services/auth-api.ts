@@ -12,6 +12,7 @@ export type AuthUser = {
     dateOfBirth?: string;
     phoneNumber?: string;
     country?: string;
+    countryCode?: string;
   };
 };
 
@@ -102,6 +103,7 @@ export function updateProfile(
       dateOfBirth?: string;
       phoneNumber?: string;
       country?: string;
+      countryCode?: string;
     };
   },
 ) {
