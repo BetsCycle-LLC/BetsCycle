@@ -336,6 +336,12 @@ export const navData: NavItem[] = [
   },
   { type: 'subheader', title: 'System Settings' },
   {
+    type: 'item',
+    title: 'Currency Management',
+    icon: <Iconify icon="solar:wallet-bold" />,
+    path: '/admin/settings/currency',
+  },
+  {
     type: 'toggle',
     title: 'Platform Configuration',
     icon: <Iconify icon="solar:settings-bold-duotone" />,
