@@ -91,7 +91,7 @@ export function BalancePopover({ sx, ...other }: BoxProps) {
           display: 'flex',
           alignItems: 'center',
           gap: 1,
-          px: 1.5,
+          px: 0.75,
           py: 0.75,
           borderRadius: 1,
           cursor: 'pointer',
