@@ -11,12 +11,14 @@ import Table from '@mui/material/Table';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import Checkbox from '@mui/material/Checkbox';
+import Popover from '@mui/material/Popover';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TextField from '@mui/material/TextField';
 import TableHead from '@mui/material/TableHead';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
+import MenuList from '@mui/material/MenuList';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -590,73 +592,16 @@ export function CurrencyManagementView() {
                       table.page * table.rowsPerPage,
                       table.page * table.rowsPerPage + table.rowsPerPage
                     )
-                    .map((currency) => {
-                      const isSelected = table.selected.includes(currency.id);
-
-                      return (
-                        <TableRow
-                          key={currency.id}
-                          hover
-                          selected={isSelected}
-                          sx={{
-                            borderBottomStyle: 'dashed',
-                            borderBottomColor: 'divider',
-                            borderBottomWidth: 1,
-                          }}
-                        >
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              checked={isSelected}
-                              onChange={() => table.onSelectRow(currency.id)}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Box
-                              component="img"
-                              src={currency.symbol}
-                              alt={`${currency.currencyName} symbol`}
-                              sx={{
-                                width: 32,
-                                height: 32,
-                                objectFit: 'contain',
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>{currency.currencyCode}</TableCell>
-                          <TableCell>{currency.currencyName}</TableCell>
-                          <TableCell>
-                            <Label color={typeColors[currency.currencyType]}>
-                              {currency.currencyType}
-                            </Label>
-                          </TableCell>
-                          <TableCell align="right">{formatFee(currency.withdrawalFee)}</TableCell>
-                          <TableCell align="right">{formatFee(currency.depositFee)}</TableCell>
-                          <TableCell align="right">{formatAmount(currency.minDeposit)}</TableCell>
-                          <TableCell align="right">{formatAmount(currency.maxWithdrawal)}</TableCell>
-                          <TableCell align="right">{formatAmount(currency.minWithdrawal)}</TableCell>
-                          <TableCell>
-                            <Label color={statusColors[currency.status]}>{currency.status}</Label>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Tooltip title="Edit">
-                              <IconButton onClick={() => handleOpenEdit(currency)}>
-                                <Iconify icon="solar:pen-bold" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                              <IconButton
-                                color="error"
-                                onClick={() =>
-                                  handleConfirmDelete([currency.id], currency.currencyCode)
-                                }
-                              >
-                                <Iconify icon="solar:trash-bin-trash-bold" />
-                              </IconButton>
-                            </Tooltip>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    .map((currency) => (
+                      <CurrencyTableRow
+                        key={currency.id}
+                        currency={currency}
+                        selected={table.selected.includes(currency.id)}
+                        onSelectRow={() => table.onSelectRow(currency.id)}
+                        onEditRow={() => handleOpenEdit(currency)}
+                        onDeleteRow={() => handleConfirmDelete([currency.id], currency.currencyCode)}
+                      />
+                    ))}
 
                   <TableEmptyRows
                     height={68}
@@ -1000,6 +945,109 @@ function CurrencyTableToolbar({
         </Tooltip>
       )}
     </Toolbar>
+  );
+}
+
+type CurrencyTableRowProps = {
+  currency: CurrencyItem;
+  selected: boolean;
+  onSelectRow: () => void;
+  onEditRow: () => void;
+  onDeleteRow: () => void;
+};
+
+function CurrencyTableRow({
+  currency,
+  selected,
+  onSelectRow,
+  onEditRow,
+  onDeleteRow,
+}: CurrencyTableRowProps) {
+  const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+
+  const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    setOpenPopover(event.currentTarget);
+  }, []);
+
+  const handleClosePopover = useCallback(() => {
+    setOpenPopover(null);
+  }, []);
+
+  const handleEdit = useCallback(() => {
+    handleClosePopover();
+    onEditRow();
+  }, [handleClosePopover, onEditRow]);
+
+  const handleDelete = useCallback(() => {
+    handleClosePopover();
+    onDeleteRow();
+  }, [handleClosePopover, onDeleteRow]);
+
+  return (
+    <>
+      <TableRow
+        hover
+        selected={selected}
+        sx={{
+          borderBottomStyle: 'dashed',
+          borderBottomColor: 'divider',
+          borderBottomWidth: 1,
+        }}
+      >
+        <TableCell padding="checkbox">
+          <Checkbox checked={selected} onChange={onSelectRow} />
+        </TableCell>
+        <TableCell>
+          <Box
+            component="img"
+            src={currency.symbol}
+            alt={`${currency.currencyName} symbol`}
+            sx={{
+              width: 32,
+              height: 32,
+              objectFit: 'contain',
+            }}
+          />
+        </TableCell>
+        <TableCell>{currency.currencyCode}</TableCell>
+        <TableCell>{currency.currencyName}</TableCell>
+        <TableCell>
+          <Label color={typeColors[currency.currencyType]}>{currency.currencyType}</Label>
+        </TableCell>
+        <TableCell align="right">{formatFee(currency.withdrawalFee)}</TableCell>
+        <TableCell align="right">{formatFee(currency.depositFee)}</TableCell>
+        <TableCell align="right">{formatAmount(currency.minDeposit)}</TableCell>
+        <TableCell align="right">{formatAmount(currency.maxWithdrawal)}</TableCell>
+        <TableCell align="right">{formatAmount(currency.minWithdrawal)}</TableCell>
+        <TableCell>
+          <Label color={statusColors[currency.status]}>{currency.status}</Label>
+        </TableCell>
+        <TableCell align="right">
+          <IconButton onClick={handleOpenPopover}>
+            <Iconify icon="eva:more-vertical-fill" />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+
+      <Popover
+        open={!!openPopover}
+        anchorEl={openPopover}
+        onClose={handleClosePopover}
+        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MenuList sx={{ p: 0.5 }}>
+          <MenuItem onClick={handleEdit}>
+            <Iconify icon="solar:pen-bold" sx={{ mr: 1 }} />
+            Edit
+          </MenuItem>
+          <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+            <Iconify icon="solar:trash-bin-trash-bold" sx={{ mr: 1 }} />
+            Delete
+          </MenuItem>
+        </MenuList>
+      </Popover>
+    </>
   );
 }
 
