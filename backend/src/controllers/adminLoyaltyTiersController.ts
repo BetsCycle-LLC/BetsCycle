@@ -11,6 +11,7 @@ type LevelUpBonus = {
 type TierLevel = {
   levelNumber: number;
   xp: number;
+  faucetInterval: number;
   weeklyRakeback: number;
   monthlyRakeback: number;
   levelUpBonus: LevelUpBonus[];
@@ -52,6 +53,7 @@ function sanitizeTier(tier: {
     levels: tier.levels.map((level) => ({
       levelNumber: level.levelNumber,
       xp: level.xp,
+      faucetInterval: level.faucetInterval ?? 0,
       weeklyRakeback: level.weeklyRakeback,
       monthlyRakeback: level.monthlyRakeback,
       levelUpBonus: level.levelUpBonus.map((bonus) => ({
@@ -136,6 +138,7 @@ export async function createLoyaltyTier(req: Request, res: Response) {
       levels: levels.map((level) => ({
         levelNumber: parseNumber(level.levelNumber, 'level number'),
         xp: parseNumber(level.xp, 'XP'),
+        faucetInterval: parseNumber(level.faucetInterval ?? 0, 'faucet interval'),
         weeklyRakeback: parseNumber(level.weeklyRakeback, 'weeklyRakeback'),
         monthlyRakeback: parseNumber(level.monthlyRakeback, 'monthlyRakeback'),
         levelUpBonus: level.levelUpBonus.map((bonus) => ({
@@ -216,6 +219,7 @@ export async function updateLoyaltyTier(req: Request, res: Response) {
       updates.levels = levels.map((level) => ({
         levelNumber: parseNumber(level.levelNumber, 'level number'),
         xp: parseNumber(level.xp, 'XP'),
+        faucetInterval: parseNumber(level.faucetInterval ?? 0, 'faucet interval'),
         weeklyRakeback: parseNumber(level.weeklyRakeback, 'weeklyRakeback'),
         monthlyRakeback: parseNumber(level.monthlyRakeback, 'monthlyRakeback'),
         levelUpBonus: level.levelUpBonus.map((bonus) => ({

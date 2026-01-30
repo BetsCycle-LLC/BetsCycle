@@ -9,6 +9,7 @@ const loyaltyTierSchema = new Schema(
       {
         levelNumber: { type: Number, required: true },
         xp: { type: Number, required: true, default: 0 },
+        faucetInterval: { type: Number, required: true, default: 0 },
         weeklyRakeback: { type: Number, required: true, default: 0 },
         monthlyRakeback: { type: Number, required: true, default: 0 },
         levelUpBonus: [

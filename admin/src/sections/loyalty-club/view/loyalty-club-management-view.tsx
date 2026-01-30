@@ -50,6 +50,7 @@ type TierForm = {
   levels: Array<{
     levelNumber: number;
     xp: string;
+    faucetInterval: string;
     weeklyRakeback: string;
     monthlyRakeback: string;
     levelUpBonus: Array<{
@@ -119,6 +120,7 @@ export function LoyaltyClubManagementView() {
     const defaultLevel = {
       levelNumber: 1,
       xp: '0',
+      faucetInterval: '0',
       weeklyRakeback: '0',
       monthlyRakeback: '0',
       levelUpBonus: currencies.map((currency) => ({
@@ -146,6 +148,7 @@ export function LoyaltyClubManagementView() {
       return {
         levelNumber: level.levelNumber,
         xp: String(level.xp),
+        faucetInterval: String(level.faucetInterval ?? 0),
         weeklyRakeback: String(level.weeklyRakeback),
         monthlyRakeback: String(level.monthlyRakeback),
         levelUpBonus: allBonuses,
@@ -198,6 +201,7 @@ export function LoyaltyClubManagementView() {
         {
           levelNumber: newLevelNumber,
           xp: '0',
+          faucetInterval: '0',
           weeklyRakeback: '0',
           monthlyRakeback: '0',
           levelUpBonus: currencies.map((currency) => ({
@@ -222,7 +226,7 @@ export function LoyaltyClubManagementView() {
   };
 
   const handleLevelFieldChange =
-    (levelIndex: number, field: 'xp' | 'weeklyRakeback' | 'monthlyRakeback') =>
+    (levelIndex: number, field: 'xp' | 'faucetInterval' | 'weeklyRakeback' | 'monthlyRakeback') =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setFormValues((prev) => ({
         ...prev,
@@ -271,6 +275,7 @@ export function LoyaltyClubManagementView() {
     const levels: TierLevel[] = formValues.levels.map((level) => ({
       levelNumber: level.levelNumber,
       xp: parseNumberField(level.xp, 'XP'),
+      faucetInterval: parseNumberField(level.faucetInterval, 'Faucet interval'),
       weeklyRakeback: parseNumberField(level.weeklyRakeback, 'Weekly rakeback'),
       monthlyRakeback: parseNumberField(level.monthlyRakeback, 'Monthly rakeback'),
       levelUpBonus: level.levelUpBonus
@@ -900,6 +905,24 @@ export function LoyaltyClubManagementView() {
                                     <Iconify icon="solar:share-bold" color="warning.main" />
                                   </InputAdornment>
                                 ),
+                              }}
+                            />
+
+                            <TextField
+                              fullWidth
+                              label="Faucet Interval"
+                              type="number"
+                              value={level.faucetInterval}
+                              onChange={handleLevelFieldChange(levelIndex, 'faucetInterval')}
+                              inputProps={{ min: 0, step: 1 }}
+                              helperText="Minutes between faucet claims for this level"
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <Iconify icon="solar:clock-circle-outline" color="info.main" />
+                                  </InputAdornment>
+                                ),
+                                endAdornment: <InputAdornment position="end">min</InputAdornment>,
                               }}
                             />
 

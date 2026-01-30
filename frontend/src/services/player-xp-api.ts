@@ -31,6 +31,7 @@ export type LoyaltyLevelInfo = {
   order: number;
   levelNumber: number;
   xp: number;
+  faucetInterval: number;
   weeklyRakeback: number;
   monthlyRakeback: number;
   levelUpBonus: Array<{

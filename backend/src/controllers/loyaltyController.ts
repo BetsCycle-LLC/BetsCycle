@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { LoyaltyTier } from '../models/LoyaltyTier';
 import { getLoyaltyLevelByXP, getNextLoyaltyLevel, getLoyaltyProgress } from '../utils/loyalty';
 
 /**
@@ -72,6 +73,41 @@ export async function getLoyaltyProgressHandler(req: Request, res: Response) {
   } catch (error) {
     console.error('Error getting loyalty progress:', error);
     return res.status(500).json({ message: 'Failed to get loyalty progress.' });
+  }
+}
+
+/**
+ * Get all loyalty tiers and levels
+ * GET /api/loyalty/tiers
+ */
+export async function getLoyaltyTiersHandler(_req: Request, res: Response) {
+  try {
+    const tiers = await LoyaltyTier.find().sort({ order: 1 });
+
+    return res.json({
+      tiers: tiers.map((tier) => ({
+        id: tier._id.toString(),
+        tiersName: tier.tiersName,
+        icon: tier.icon,
+        order: tier.order,
+        levels: tier.levels.map((level) => ({
+          levelNumber: level.levelNumber,
+          xp: level.xp,
+          faucetInterval: level.faucetInterval ?? 0,
+          weeklyRakeback: level.weeklyRakeback,
+          monthlyRakeback: level.monthlyRakeback,
+          levelUpBonus: level.levelUpBonus.map((bonus) => ({
+            currencyId: bonus.currencyId.toString(),
+            amount: bonus.amount,
+          })),
+        })),
+        createdAt: tier.createdAt,
+        updatedAt: tier.updatedAt,
+      })),
+    });
+  } catch (error) {
+    console.error('Error getting loyalty tiers:', error);
+    return res.status(500).json({ message: 'Failed to get loyalty tiers.' });
   }
 }
 
