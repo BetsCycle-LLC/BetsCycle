@@ -31,6 +31,7 @@ import { AccountPopover } from '../components/account-popover';
 import { LanguagePopover } from '../components/language-popover';
 import { NotificationsPopover } from '../components/notifications-popover';
 import { BalancePopover } from '../components/balance-popover';
+import { LoyaltyProgress } from '../components/loyalty-progress';
 import { useAuth } from 'src/auth/use-auth';
 
 import type { MainSectionProps } from '../core/main-section';
@@ -130,6 +131,9 @@ export function DashboardLayout({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.75 } }}>
           {/** @slot Searchbar */}
           <Searchbar />
+
+          {/** @slot Loyalty progress */}
+          {user && <LoyaltyProgress />}
 
           {/** @slot Balance popover */}
           {user && <BalancePopover />}
