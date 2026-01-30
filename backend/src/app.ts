@@ -1,11 +1,13 @@
 import cors from 'cors';
 import express from 'express';
+import path from 'path';
 
 import { env } from './config/env';
 import { authRouter } from './routes/auth';
 import { adminAuthRouter } from './routes/admin-auth';
 import { adminPlayersRouter } from './routes/admin-players';
 import { adminCurrenciesRouter } from './routes/admin-currencies';
+import { adminLoyaltyTiersRouter } from './routes/admin-loyalty-tiers';
 import { currenciesRouter } from './routes/currencies';
 
 export function createApp() {
@@ -39,6 +41,9 @@ export function createApp() {
   app.options('*', cors(corsOptions));
   app.use(express.json({ limit: '1mb' }));
 
+  // Serve uploaded files
+  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });
   });
@@ -47,6 +52,7 @@ export function createApp() {
   app.use('/api/admin/auth', adminAuthRouter);
   app.use('/api/admin/players', adminPlayersRouter);
   app.use('/api/admin/currencies', adminCurrenciesRouter);
+  app.use('/api/admin/loyalty-tiers', adminLoyaltyTiersRouter);
   app.use('/api/currencies', currenciesRouter);
 
   app.use((req, res) => {

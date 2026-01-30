@@ -24,6 +24,7 @@ export const WalletPage = lazy(() => import('src/pages/wallet'));
 export const SupportPage = lazy(() => import('src/pages/support'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const CurrencyManagementPage = lazy(() => import('src/pages/currency'));
+export const LoyaltyClubManagementPage = lazy(() => import('src/pages/loyalty-club'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
@@ -71,6 +72,7 @@ export const routesSection: RouteObject[] = [
       { path: 'user', element: <UserPage /> },
       { path: 'admin/users', element: <UserPage /> },
       { path: 'admin/settings/currency', element: <CurrencyManagementPage /> },
+      { path: 'admin/settings/loyalty-club', element: <LoyaltyClubManagementPage /> },
     ],
   },
   {

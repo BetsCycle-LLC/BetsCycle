@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
@@ -12,8 +12,8 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 
 import {
   COUNTRY_OPTIONS,
-  getCountryCodeFromPhone,
   getCountryOptionByCode,
+  getCountryCodeFromPhone,
 } from 'src/utils/country';
 
 import type { CountryOption } from 'src/utils/country';
