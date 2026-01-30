@@ -1,5 +1,6 @@
 export * from './casino-view';
 export * from './home-view';
+export * from './loyalty-club-view';
 export * from './originals-view';
 export * from './promotions-view';
 export * from './sports-view';
