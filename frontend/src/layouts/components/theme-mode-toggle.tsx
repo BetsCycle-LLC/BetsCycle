@@ -3,15 +3,19 @@ import Tooltip from '@mui/material/Tooltip';
 import { useColorScheme } from '@mui/material/styles';
 
 import { Iconify } from 'src/components/iconify';
+import { useThemeStore } from 'src/store/theme-store';
 
 // ----------------------------------------------------------------------
 
 export function ThemeModeToggle() {
   const { mode, setMode } = useColorScheme();
+  const { setThemeMode } = useThemeStore();
   const isDark = mode === 'dark';
 
   const handleToggle = () => {
-    setMode(isDark ? 'light' : 'dark');
+    const nextMode = isDark ? 'light' : 'dark';
+    setMode(nextMode);
+    setThemeMode(nextMode);
   };
 
   return (

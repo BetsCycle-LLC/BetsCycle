@@ -9,6 +9,7 @@ import { routesSection } from './routes/sections';
 import { ErrorBoundary } from './routes/components';
 import { ThemeProvider } from './theme/theme-provider';
 import { CurrencyStoreProvider } from './store/currency-store';
+import { ThemeStoreProvider } from './store/theme-store';
 
 // ----------------------------------------------------------------------
 
@@ -28,14 +29,16 @@ const root = createRoot(document.getElementById('root')!);
 
 root.render(
   <StrictMode>
-    <ThemeProvider>
-      <AuthProvider>
-        <CurrencyStoreProvider>
-          <SnackbarProvider>
-            <RouterProvider router={router} />
-          </SnackbarProvider>
-        </CurrencyStoreProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ThemeStoreProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <CurrencyStoreProvider>
+            <SnackbarProvider>
+              <RouterProvider router={router} />
+            </SnackbarProvider>
+          </CurrencyStoreProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ThemeStoreProvider>
   </StrictMode>
 );
