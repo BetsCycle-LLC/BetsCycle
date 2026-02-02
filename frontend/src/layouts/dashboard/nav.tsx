@@ -1,6 +1,6 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
@@ -11,7 +11,7 @@ import { useTheme } from '@mui/material/styles';
 import ListItemButton from '@mui/material/ListItemButton';
 import Drawer, { drawerClasses } from '@mui/material/Drawer';
 
-import { usePathname } from 'src/routes/hooks';
+import { useRouter, usePathname } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { Iconify } from 'src/components/iconify';
@@ -19,7 +19,7 @@ import { Logo } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useAuth } from 'src/auth/use-auth';
 
-import { WorkspacesPopover } from '../components/workspaces-popover';
+
 
 import type { NavItem } from '../nav-config-dashboard';
 import type { WorkspacesPopoverProps } from '../components/workspaces-popover';
@@ -113,9 +113,10 @@ export function NavMobile({
 
 export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
-  const { user, openAuthDialog, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const sections = data.reduce<
     Array<{
@@ -164,12 +165,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
 
       const handleAction = () => {
         if (item.action === 'sign-in') {
-          openAuthDialog('sign-in');
-          return;
-        }
-
-        if (item.action === 'sign-up') {
-          openAuthDialog('sign-up');
+          router.push('/sign-in');
           return;
         }
 
@@ -178,7 +174,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
           return;
         }
 
-        openAuthDialog('sign-in');
+        router.push('/sign-in');
       };
 
       return (
@@ -330,7 +326,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
-                '&::before': {  
+                '&::before': {
                   content: '""',
                   position: 'absolute',
                   left: -2,
@@ -455,10 +451,10 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
           href={item.path}
           sx={[
             (theme) => ({
-              pl: 2,
-              py: 0.75,
+              pl: 1.5,
+              py: 0.5,
+              pr: 1,
               gap: 1.5,
-              pr: 1.5,
               borderRadius: 1,
               typography: 'body2',
               fontSize: 13,
@@ -467,7 +463,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
               bgcolor: isActived
                 ? varAlpha(theme.vars.palette.success.mainChannel, 0.16)
                 : 'transparent',
-              minHeight: 40,
+              minHeight: 44,
               transition: theme.transitions.create(['background-color', 'color'], {
                 duration: theme.transitions.duration.shortest,
               }),
@@ -494,8 +490,8 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
             component="span"
             className="nav-item-icon"
             sx={{
-              width: 22,
-              height: 22,
+              width: 24,
+              height: 24,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -516,11 +512,9 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
 
   return (
     <>
-      <Box sx={{ pl: 3.5, pt: 2.5, pb: 1 }}>
-        <Logo />
+      <Box sx={{ pt: 2.5}}>
+        {slots?.topArea}
       </Box>
-
-      {slots?.topArea}
 
       {/* <WorkspacesPopover data={workspaces} sx={{ my: 2 }} /> */}
 
