@@ -68,6 +68,7 @@ export function BetsCycleLoyaltyClubView() {
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
   const tiersSliderRef = useRef<Slider | null>(null);
+  const tierLevelsSliderRef = useRef<Slider | null>(null);
   const { selectedCurrencyId } = useCurrencyStore();
   const { mode: themeMode } = useThemeStore();
   const activeThemeMode = themeMode ?? 'dark';
@@ -213,6 +214,17 @@ export function BetsCycleLoyaltyClubView() {
   const handleTierNext = () => {
     tiersSliderRef.current?.slickNext();
   };
+
+  const handleTierSelect = useCallback(
+    (tierId: string) => {
+      setSelectedTierId(tierId);
+      const targetIndex = tierLevelItems.findIndex((item) => item.tierId === tierId);
+      if (targetIndex >= 0) {
+        tierLevelsSliderRef.current?.slickGoTo(targetIndex);
+      }
+    },
+    [tierLevelItems]
+  );
 
   const tierLevelsSliderSettings = useMemo(() => {
     return {
@@ -480,7 +492,7 @@ export function BetsCycleLoyaltyClubView() {
                                 WebkitUserDrag: 'none',
                               },
                             }}
-                            onClick={() => setSelectedTierId(tier.id)}
+                            onClick={() => handleTierSelect(tier.id)}
                           >
                             {tier.icon ? (
                               <Box
@@ -616,7 +628,7 @@ export function BetsCycleLoyaltyClubView() {
               {tierLevelItems.length === 0 ? (
                 <Typography color="text.secondary">No levels configured for this tier yet.</Typography>
               ) : (
-                <Slider {...tierLevelsSliderSettings}>
+                <Slider ref={tierLevelsSliderRef} {...tierLevelsSliderSettings}>
                   {tierLevelItems.map((item) => {
                     const xpLabel = item.level.xp.toLocaleString();
                     const bonusLabel = formatLevelUpBonus(item.level.levelUpBonus);
