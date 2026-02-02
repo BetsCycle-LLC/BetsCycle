@@ -1,6 +1,6 @@
 import type { BoxProps } from '@mui/material/Box';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -18,6 +18,7 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { fetchCurrencies, type Currency } from 'src/services/currency-api';
+import { useCurrencyStore } from 'src/store/currency-store';
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
@@ -37,6 +38,8 @@ export function BalancePopover({ sx, ...other }: BoxProps) {
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { selectedCurrencyId, setSelectedCurrencyId } = useCurrencyStore();
+  const selectedCurrencyIdRef = useRef<string | null>(null);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLElement>) => {
     setOpenPopover(event.currentTarget);
@@ -52,7 +55,12 @@ export function BalancePopover({ sx, ...other }: BoxProps) {
 
   const handleSelectCurrency = useCallback((currency: Currency) => {
     setSelectedCurrency(currency);
-  }, []);
+    setSelectedCurrencyId(currency.id);
+  }, [setSelectedCurrencyId]);
+
+  useEffect(() => {
+    selectedCurrencyIdRef.current = selectedCurrencyId;
+  }, [selectedCurrencyId]);
 
   // Fetch currencies on mount and auto-select first crypto currency
   useEffect(() => {
@@ -61,12 +69,18 @@ export function BalancePopover({ sx, ...other }: BoxProps) {
     fetchCurrencies()
       .then((response) => {
         setCurrencies(response.currencies);
-        // Auto-select first crypto currency
         if (response.currencies.length > 0) {
+          const storedCurrency = response.currencies.find(
+            (currency) => currency.id === selectedCurrencyIdRef.current
+          );
           const firstCryptoCurrency = response.currencies.find(
             (currency) => currency.currencyType === 'crypto'
           );
-          setSelectedCurrency(firstCryptoCurrency || response.currencies[0]);
+          const nextCurrency = storedCurrency || firstCryptoCurrency || response.currencies[0];
+          setSelectedCurrency(nextCurrency ?? null);
+          if (nextCurrency?.id) {
+            setSelectedCurrencyId(nextCurrency.id);
+          }
         }
       })
       .catch((err) => {
@@ -75,7 +89,15 @@ export function BalancePopover({ sx, ...other }: BoxProps) {
       .finally(() => {
         setLoading(false);
       });
-  }, []); // Run only once on mount
+  }, [setSelectedCurrencyId]); // Run only once on mount
+
+  useEffect(() => {
+    if (!selectedCurrencyId || currencies.length === 0) return;
+    const match = currencies.find((currency) => currency.id === selectedCurrencyId);
+    if (match && match.id !== selectedCurrency?.id) {
+      setSelectedCurrency(match);
+    }
+  }, [currencies, selectedCurrency?.id, selectedCurrencyId]);
 
   const filteredCurrencies = currencies.filter(
     (currency) => currency.currencyType === activeTab

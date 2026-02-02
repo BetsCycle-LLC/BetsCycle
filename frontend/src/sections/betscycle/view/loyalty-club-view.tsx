@@ -1,4 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -12,13 +16,13 @@ import CardContent from '@mui/material/CardContent';
 import LinearProgress from '@mui/material/LinearProgress';
 import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
-
 import { useAuth } from 'src/auth/use-auth';
 import { Iconify } from 'src/components/iconify';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { fetchPlayerXP, type PlayerXPResponse } from 'src/services/player-xp-api';
 import { fetchLoyaltyTiers, type LoyaltyTier } from 'src/services/loyalty-tiers-api';
 import { fetchCurrencies, type Currency } from 'src/services/currency-api';
+import { useCurrencyStore } from 'src/store/currency-store';
 
 // ----------------------------------------------------------------------
 
@@ -61,7 +65,9 @@ export function BetsCycleLoyaltyClubView() {
   const [tiersLoading, setTiersLoading] = useState(false);
   const [tiersError, setTiersError] = useState<string | null>(null);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
-  const tiersScrollRef = useRef<HTMLDivElement | null>(null);
+  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
+  const tiersSliderRef = useRef<Slider | null>(null);
+  const { selectedCurrencyId } = useCurrencyStore();
 
   useEffect(() => {
     if (!user || !token) {
@@ -88,6 +94,11 @@ export function BetsCycleLoyaltyClubView() {
       .then(([tiersResponse, currenciesResponse]) => {
         setTiers(tiersResponse.tiers);
         setCurrencies(currenciesResponse.currencies);
+        setSelectedTierId((prev) =>
+          prev && tiersResponse.tiers.some((tier) => tier.id === prev)
+            ? prev
+            : tiersResponse.tiers[0]?.id ?? null
+        );
       })
       .catch((err) => {
         setTiersError(err instanceof Error ? err.message : 'Failed to load loyalty tiers');
@@ -109,33 +120,76 @@ export function BetsCycleLoyaltyClubView() {
     () => new Map(currencies.map((currency) => [currency.id, currency])),
     [currencies]
   );
+  const formatLevelUpBonus = useCallback(
+    (levelUpBonus: { currencyId: string; amount: number }[]) => {
+      if (!levelUpBonus.length) return '-';
+      const selectedBonus = selectedCurrencyId
+        ? levelUpBonus.find((bonus) => bonus.currencyId === selectedCurrencyId)
+        : levelUpBonus[0];
+      if (!selectedBonus) return '-';
+      const currency = currencyMap.get(selectedBonus.currencyId);
+      return `${selectedBonus.amount} ${currency?.currencyCode ?? selectedBonus.currencyId}`;
+    },
+    [currencyMap, selectedCurrencyId]
+  );
+  const tierLevelItems = useMemo(
+    () =>
+      sortedTiers.flatMap((tier) => {
+        const sortedLevels = [...tier.levels].sort((a, b) => a.levelNumber - b.levelNumber);
+        return sortedLevels.map((level) => ({
+          tierId: tier.id,
+          tierName: tier.tiersName,
+          tierIcon: tier.icon,
+          level,
+        }));
+      }),
+    [sortedTiers]
+  );
 
-  const handleScrollTiers = (direction: 'left' | 'right') => {
-    const container = tiersScrollRef.current;
-    if (!container) {
-      return;
-    }
+  const sliderSettings = useMemo(
+    () => ({
+      dots: false,
+      arrows: false,
+      infinite: false,
+      speed: 500,
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      swipeToSlide: true,
+      responsive: [
+        { breakpoint: 1400, settings: { slidesToShow: 4 } },
+        { breakpoint: 1200, settings: { slidesToShow: 3 } },
+        { breakpoint: 900, settings: { slidesToShow: 2 } },
+        { breakpoint: 600, settings: { slidesToShow: 1 } },
+      ],
+    }),
+    []
+  );
 
-    const scrollAmount = Math.max(240, container.clientWidth);
-    const offset = direction === 'left' ? -scrollAmount : scrollAmount;
-    const start = container.scrollLeft;
-    const target = start + offset;
-    const duration = 400;
-    const startTime = performance.now();
-
-    const animate = (time: number) => {
-      const elapsed = time - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = 0.5 - Math.cos(progress * Math.PI) / 2;
-      container.scrollLeft = start + (target - start) * ease;
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    requestAnimationFrame(animate);
+  const handleTierPrev = () => {
+    tiersSliderRef.current?.slickPrev();
   };
+
+  const handleTierNext = () => {
+    tiersSliderRef.current?.slickNext();
+  };
+
+  const tierLevelsSliderSettings = useMemo(() => {
+    return {
+      dots: false,
+      arrows: false,
+      infinite: false,
+      speed: 500,
+      slidesToShow: 5.2,
+      slidesToScroll: 1,
+      swipeToSlide: true,
+      responsive: [
+        { breakpoint: 1400, settings: { slidesToShow: 3.5 } },
+        { breakpoint: 1200, settings: { slidesToShow: 3.7 } },
+        { breakpoint: 900, settings: { slidesToShow: 2.9 } },
+        { breakpoint: 600, settings: { slidesToShow: 1.85 } },
+      ],
+    };
+  }, []);
 
   return (
     <DashboardContent maxWidth="xl">
@@ -210,12 +264,7 @@ export function BetsCycleLoyaltyClubView() {
                         <Stack spacing={0.5}>
                           <Typography variant="subtitle2">Level-up bonuses</Typography>
                           <Typography color="text.secondary" variant="body2">
-                            {currentLevel.levelUpBonus
-                              .map((bonus) => {
-                                const currency = currencyMap.get(bonus.currencyId);
-                                return `${bonus.amount} ${currency?.currencyCode ?? bonus.currencyId}`;
-                              })
-                              .join(', ')}
+                            {formatLevelUpBonus(currentLevel.levelUpBonus)}
                           </Typography>
                         </Stack>
                       ) : null}
@@ -311,129 +360,207 @@ export function BetsCycleLoyaltyClubView() {
           </Grid>
         </Grid>
 
-        {/* <Card>
-          <CardContent> */}
-            <Stack spacing={2.5}>
-              <Stack
-                spacing={1}
-                direction={{ xs: 'column', sm: 'row' }}
-                alignItems={{ sm: 'center' }}
-                justifyContent="space-between"
+        <Stack spacing={2.5} position="relative">
+          <Stack
+            spacing={1}
+            direction={{ xs: 'column', sm: 'row' }}
+            alignItems={{ sm: 'center' }}
+            justifyContent="space-between"
+          >
+            <Box>
+              <Typography variant="h5">Loyalty Tiers</Typography>
+              <Typography color="text.secondary">
+                See every tier in the loyalty club and the progression path.
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleTierPrev}
+                sx={{ minWidth: 36, px: 1 }}
               >
-                <Box>
-                  <Typography variant="h5">Loyalty Tiers</Typography>
-                  <Typography color="text.secondary">
-                    See every tier in the loyalty club and the progression path.
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => handleScrollTiers('left')}
-                    sx={{ minWidth: 36, px: 1 }}
-                  >
-                    <Iconify icon="eva:arrow-ios-upward-fill" sx={{ transform: 'rotate(-90deg)' }} />
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => handleScrollTiers('right')}
-                    sx={{ minWidth: 36, px: 1 }}
-                  >
-                    <Iconify icon="eva:arrow-ios-upward-fill" sx={{ transform: 'rotate(90deg)' }} />
-                  </Button>
-                </Stack>
-              </Stack>
+                <Iconify icon="eva:arrow-ios-upward-fill" sx={{ transform: 'rotate(-90deg)' }} />
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleTierNext}
+                sx={{ minWidth: 36, px: 1 }}
+              >
+                <Iconify icon="eva:arrow-ios-upward-fill" sx={{ transform: 'rotate(90deg)' }} />
+              </Button>
+            </Stack>
+          </Stack>
 
-              {tiersLoading && <LinearProgress />}
-              {tiersError && (
-                <Typography color="error" variant="body2">
-                  {tiersError}
-                </Typography>
-              )}
+          {tiersLoading && <LinearProgress />}
+          {tiersError && (
+            <Typography color="error" variant="body2">
+              {tiersError}
+            </Typography>
+          )}
 
-              {!tiersLoading && !tiersError && sortedTiers.length > 0 && (
-                <Box
-                  ref={tiersScrollRef}
-                  sx={{
-                    overflowX: 'auto',
-                    scrollBehavior: 'smooth',
-                    pb: 1,
-                    scrollbarWidth: 'none',
-                    '&::-webkit-scrollbar': {
-                      display: 'none',
-                    },
-                  }}
-                >
-                  <Box sx={{ position: 'relative', pb: 5 }}>
-                    <Stack direction="row" alignItems="flex-start">
-                      {sortedTiers.map((tier) => {
-                        const minXP =
-                          tier.levels.length > 0
-                            ? Math.min(...tier.levels.map((level) => level.xp))
-                            : 0;
-                        const levelRatio = tier.levels.length / maxTierLevels;
-                        const isCurrentTier = currentLevel?.tiersName === tier.tiersName;
+          {!tiersLoading && !tiersError && sortedTiers.length > 0 && (
+            <Box sx={{ position: 'relative', pb: 5 }}>
+              <Slider ref={tiersSliderRef} {...sliderSettings}>
+                {sortedTiers.map((tier) => {
+                    const minXP =
+                      tier.levels.length > 0
+                        ? Math.min(...tier.levels.map((level) => level.xp))
+                        : 0;
+                    const levelRatio = tier.levels.length / maxTierLevels;
+                    const isCurrentTier = currentLevel?.tiersName === tier.tiersName;
+                    const isSelected = selectedTierId === tier.id;
 
-                        return (
-                          <Stack key={tier.id} alignItems="center" sx={{ minWidth: '20%' }}>
-                            <Box
-                              sx={{
-                                width: 180,
-                                height: 180,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
+                    return (
+                      <Box key={tier.id} sx={{ px: 1, userSelect: 'none' }}>
+                        <Stack alignItems="center" sx={{ position: 'relative' }}>
+                          <Box
+                            sx={{
+                              width: 180,
+                              height: 180,
+                              borderRadius: 2,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              '& .tier-icon': {
+                                transform: isSelected ? 'scale(1.16)' : 'scale(1)',
+                                filter: isSelected
+                                  ? 'drop-shadow(0 0px 8px rgba(25, 210, 71, 0.4))'
+                                  : 'drop-shadow(0 0 0 rgba(0,0,0,0))',
+                              },
+                              '&:hover .tier-icon': {
+                                // transform: isSelected ? 'scale(1.12)' : 'scale(1.06)',
+                                filter: 'drop-shadow(0 0px 10px rgba(25, 210, 71, 0.35))',
+                              },
+                              '& img': {
+                                userSelect: 'none',
+                                WebkitUserDrag: 'none',
+                              },
+                            }}
+                            onClick={() => setSelectedTierId(tier.id)}
+                          >
+                            {tier.icon ? (
+                              <Box
+                                component="img"
+                                src={getImageUrl(tier.icon)}
+                                alt={tier.tiersName}
+                                className="tier-icon"
+                                sx={{
+                                  width: 140,
+                                  height: 140,
+                                  objectFit: 'contain',
+                                  transition: (theme) =>
+                                    theme.transitions.create(['transform', 'filter'], {
+                                      duration: theme.transitions.duration.short,
+                                    }),
+                                }}
+                              />
+                            ) : (
+                              <Iconify
+                                icon="solar:shield-keyhole-bold-duotone"
+                                width={180}
+                                className="tier-icon"
+                                sx={{
+                                  transition: (theme) =>
+                                    theme.transitions.create(['transform', 'filter'], {
+                                      duration: theme.transitions.duration.short,
+                                    }),
+                                }}
+                              />
+                            )}
+                          </Box>
+
+                          <Box
+                            sx={{
+                              position: 'relative',
+                              width: '100%',
+                            }}
+                          >
+                            {isSelected && (
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  left: '50%',
+                                  bottom: -7,
+                                  width: 14,
+                                  height: 14,
+                                  borderRadius: '50%',
+                                  bgcolor: 'primary.main',
+                                  border: '2px solid',
+                                  borderColor: 'background.paper',
+                                  transform: 'translateX(-50%)',
+                                  boxShadow: (theme) => theme.shadows[2],
+                                  '&::after': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    inset: -6,
+                                    borderRadius: '50%',
+                                    border: '2px solid',
+                                    borderColor: 'primary.main',
+                                    opacity: 0,
+                                    animation: 'tierRipple 1.6s ease-out infinite',
+                                  },
+                                  '@keyframes tierRipple': {
+                                    '0%': {
+                                      transform: 'scale(0.6)',
+                                      opacity: 0.6,
+                                    },
+                                    '70%': {
+                                      transform: 'scale(1.6)',
+                                      opacity: 0.1,
+                                    },
+                                    '100%': {
+                                      transform: 'scale(1.9)',
+                                      opacity: 0,
+                                    },
+                                  },
+                                }}
+                              />
+                            )}
+                          </Box>
+
+                          <Stack spacing={0.5} alignItems="center" sx={{ pt: 3 }}>
+                            {isCurrentTier && (
+                              <Chip label="Current" size="small" color="primary" variant="filled" />
+                            )}
+                            <Typography
+                              variant="h6"
+                              align="center"
+                              color="primary"
+                              style={{ fontWeight: 900 }}
                             >
-                              {tier.icon ? (
-                                <Box
-                                  component="img"
-                                  src={getImageUrl(tier.icon)}
-                                  alt={tier.tiersName}
-                                  sx={{ width: 140, height: 140, objectFit: 'contain' }}
-                                />
-                              ) : (
-                                <Iconify icon="solar:shield-keyhole-bold-duotone" width={180} />
-                              )}
-                            </Box>
-
-                            <Box
-                              sx={{
-                                borderBottom: '3px dashed',
-                                width: '100%',
-                                borderColor: 'rgba(0, 167, 111, 0.4)',
-                              }}
-                            />
-
-                            <Stack spacing={0.5} alignItems="center" sx={{ pt: 3 }}>
-                              <Typography variant="h6" align="center" color="primary" style={{ fontWeight: 900 }}>
-                                {tier.tiersName}
+                              {tier.tiersName}
+                            </Typography>
+                            <Stack direction="row" spacing={1} alignItems="center" style={{ marginTop: 0 }}>
+                              <Typography
+                                variant="subtitle1"
+                                color="primary"
+                                align="center"
+                                style={{ fontWeight: 900 }}
+                              >
+                                {minXP.toLocaleString()}
                               </Typography>
-                              <Stack direction="row" spacing={1} alignItems="center" style={{ marginTop: 0 }}>
-                                <Typography variant="subtitle1" color="primary" align="center" style={{ fontWeight: 900 }}>
-                                  {minXP.toLocaleString()}
-                                </Typography>
-                                <Typography variant="subtitle2" color="text.secondary" align="center">
-                                  XP needed
-                                </Typography>
-                              </Stack>
+                              <Typography variant="subtitle2" color="text.secondary" align="center">
+                                XP needed
+                              </Typography>
                             </Stack>
                           </Stack>
-                        );
-                      })}
-                    </Stack>
-                  </Box>
-                </Box>
-              )}
+                        </Stack>
+                      </Box>
+                    );
+                  })}
+              </Slider>
+            </Box>
+          )}
 
-              {!tiersLoading && !tiersError && sortedTiers.length === 0 && (
-                <Typography color="text.secondary">No loyalty tiers configured yet.</Typography>
-              )}
-            </Stack>
-          {/* </CardContent>
-        </Card> */}
+          {!tiersLoading && !tiersError && sortedTiers.length === 0 && (
+            <Typography color="text.secondary">No loyalty tiers configured yet.</Typography>
+          )}
+          
+          <Box sx={{ borderStyle: 'dashed', borderColor: 'rgba(0, 167, 111, 0.4)', borderWidth: 2, position: 'absolute', bottom: 142, left: 0, right: 0 }} />
+        </Stack>
 
         <Stack spacing={2.5}>
           <Stack spacing={1}>
@@ -451,119 +578,123 @@ export function BetsCycleLoyaltyClubView() {
           )}
 
           {!tiersLoading && !tiersError && sortedTiers.length > 0 && (
-            <Stack spacing={3}>
-              {sortedTiers.map((tier) => {
-                const sortedLevels = [...tier.levels].sort(
-                  (a, b) => a.levelNumber - b.levelNumber
-                );
+            <Box sx={{ mx: -1 }}>
+              {tierLevelItems.length === 0 ? (
+                <Typography color="text.secondary">No levels configured for this tier yet.</Typography>
+              ) : (
+                <Slider {...tierLevelsSliderSettings}>
+                  {tierLevelItems.map((item) => {
+                    const xpLabel = item.level.xp.toLocaleString();
+                    const bonusLabel = formatLevelUpBonus(item.level.levelUpBonus);
+                    const benefitRows = [
+                      { label: 'Level-Up Bonus', value: bonusLabel },
+                      { label: 'Weekly Rakeback', value: `${item.level.weeklyRakeback}%` },
+                      { label: 'Monthly Rakeback', value: `${item.level.monthlyRakeback}%` },
+                    ];
 
-                return (
-                  <Card key={tier.id}>
-                    <CardContent>
-                      <Stack spacing={2.5}>
-                        <Stack direction="row" spacing={2} alignItems="center">
-                          <Avatar
-                            src={tier.icon ? getImageUrl(tier.icon) : undefined}
-                            alt={tier.tiersName}
-                            sx={{ width: 48, height: 48, bgcolor: 'background.neutral' }}
+                    return (
+                      <Box key={`${item.tierId}-${item.level.levelNumber}`} sx={{ px: 1 }}>
+                        <Card
+                          sx={{
+                            width: 260,
+                            borderRadius: 3,
+                            border: '1px solid',
+                            borderColor: alpha('#ffffff', 0.08),
+                            bgcolor: '#1f2732',
+                            color: '#f5f7fa',
+                            boxShadow: '0 18px 40px rgba(0, 0, 0, 0.35)',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              height: 180,
+                              bgcolor: '#2b3441',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
                           >
-                            <Iconify icon="solar:shield-keyhole-bold-duotone" width={24} />
-                          </Avatar>
-                          <Box>
-                            <Typography variant="h6">{tier.tiersName}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {sortedLevels.length} levels in this tier
-                            </Typography>
+                            {item.tierIcon ? (
+                              <Box
+                                component="img"
+                                src={getImageUrl(item.tierIcon)}
+                                alt={item.tierName}
+                                sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <Iconify icon="solar:shield-keyhole-bold-duotone" width={64} />
+                            )}
                           </Box>
-                        </Stack>
 
-                        {sortedLevels.length === 0 ? (
-                          <Typography color="text.secondary">
-                            No levels configured for this tier yet.
-                          </Typography>
-                        ) : (
-                          <Stack spacing={2}>
-                            {sortedLevels.map((level) => {
-                              const faucetLabel =
-                                level.faucetInterval > 0
-                                  ? `${level.faucetInterval} min`
-                                  : 'Not set';
-                              const bonuses = level.levelUpBonus.length
-                                ? level.levelUpBonus.map((bonus) => {
-                                  const currency = currencyMap.get(bonus.currencyId);
-                                  return `${bonus.amount} ${currency?.currencyCode ?? bonus.currencyId}`;
-                                })
-                                : ['No bonuses'];
-
-                              return (
+                          <CardContent sx={{ p: 2.5 }}>
+                            <Stack spacing={1.5}>
+                              <Stack
+                                direction="row"
+                                spacing={1.5}
+                                alignItems="center"
+                                justifyContent="space-between"
+                              >
                                 <Box
-                                  key={`${tier.id}-${level.levelNumber}`}
                                   sx={{
-                                    p: 2,
-                                    borderRadius: 2,
-                                    border: '1px solid',
-                                    borderColor: 'divider',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5,
+                                    px: 1,
+                                    py: 0.25,
+                                    borderRadius: 999,
+                                    bgcolor: alpha('#ffffff', 0.08),
                                   }}
                                 >
-                                  <Stack spacing={1.5}>
-                                    <Stack direction="row" spacing={1} alignItems="center">
-                                      <Chip label={`Level ${level.levelNumber}`} size="small" color="primary" />
-                                      <Typography variant="body2" color="text.secondary">
-                                        {level.xp.toLocaleString()} XP required
-                                      </Typography>
-                                    </Stack>
-
-                                    <Divider />
-
-                                    <Grid container spacing={2}>
-                                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                          Weekly rakeback
-                                        </Typography>
-                                        <Typography variant="subtitle2">
-                                          {level.weeklyRakeback}%
-                                        </Typography>
-                                      </Grid>
-                                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                          Monthly rakeback
-                                        </Typography>
-                                        <Typography variant="subtitle2">
-                                          {level.monthlyRakeback}%
-                                        </Typography>
-                                      </Grid>
-                                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                          Faucet interval
-                                        </Typography>
-                                        <Typography variant="subtitle2">{faucetLabel}</Typography>
-                                      </Grid>
-                                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                          Level-up bonus
-                                        </Typography>
-                                        {bonuses.map((bonus) => (
-                                          <Typography
-                                            variant="subtitle2"
-                                            key={`${tier.id}-${level.levelNumber}-${bonus}`}
-                                          >
-                                            {bonus}
-                                          </Typography>
-                                        ))}
-                                      </Grid>
-                                    </Grid>
-                                  </Stack>
+                                  <Iconify icon="solar:check-circle-bold" width={14} />
+                                  <Typography variant="caption" sx={{ color: alpha('#ffffff', 0.7) }}>
+                                    {`${item.tierName} LV.${item.level.levelNumber}`}
+                                  </Typography>
                                 </Box>
-                              );
-                            })}
-                          </Stack>
-                        )}
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </Stack>
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5,
+                                    px: 1,
+                                    py: 0.25,
+                                    borderRadius: 999,
+                                    bgcolor: alpha('#ffffff', 0.08),
+                                  }}
+                                >
+                                  <Iconify icon="solar:eye-bold" width={14} />
+                                  <Typography variant="caption" sx={{ color: alpha('#ffffff', 0.7) }}>
+                                    {xpLabel}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+
+                              <Stack spacing={1}>
+                                {benefitRows.map((row) => (
+                                  <Stack
+                                    key={`${item.tierId}-${item.level.levelNumber}-${row.label}`}
+                                    direction="row"
+                                    alignItems="center"
+                                    justifyContent="space-between"
+                                  >
+                                    <Typography variant="body2" sx={{ color: alpha('#ffffff', 0.7) }}>
+                                      {row.label}
+                                    </Typography>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                      {row.value}
+                                    </Typography>
+                                  </Stack>
+                                ))}
+                              </Stack>
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      </Box>
+                    );
+                  })}
+                </Slider>
+              )}
+            </Box>
           )}
 
           {!tiersLoading && !tiersError && sortedTiers.length === 0 && (
