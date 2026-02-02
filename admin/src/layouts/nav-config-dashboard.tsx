@@ -342,6 +342,12 @@ export const navData: NavItem[] = [
     path: '/admin/settings/currency',
   },
   {
+    type: 'item',
+    title: 'Loyalty Club Management',
+    icon: <Iconify icon="solar:shield-keyhole-bold-duotone" />,
+    path: '/admin/settings/loyalty-club',
+  },
+  {
     type: 'toggle',
     title: 'Platform Configuration',
     icon: <Iconify icon="solar:settings-bold-duotone" />,

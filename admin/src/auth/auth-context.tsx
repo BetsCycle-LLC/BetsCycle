@@ -1,7 +1,7 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback, createContext } from 'react';
 
-import type { AuthResponse, AuthUser, LoginPayload } from 'src/services/auth-api';
-import { fetchProfile, login } from 'src/services/auth-api';
+import type { AuthUser, AuthResponse, LoginPayload } from 'src/services/auth-api';
+import { login, fetchProfile } from 'src/services/auth-api';
 
 type AuthContextValue = {
   user: AuthUser | null;

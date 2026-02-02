@@ -205,6 +205,12 @@ export const navData: NavItem[] = [
     children: [
       {
         type: 'item',
+        title: 'Loyalty Club',
+        path: '/loyalty-club',
+        icon: <Iconify icon="solar:check-circle-bold" />,
+      },
+      {
+        type: 'item',
         title: 'Welcome Bonus, Free Spins, Cashback Offers',
         path: '/promotions',
         icon: <Iconify icon="eva:checkmark-fill" />,

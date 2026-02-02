@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -25,7 +25,7 @@ import { useSnackbar } from 'notistack';
 import { _users } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useAuth } from 'src/auth/use-auth';
-import { fetchAdminPlayers, updateAdminPlayer, type AdminPlayer } from 'src/services/player-api';
+import { type AdminPlayer, fetchAdminPlayers, updateAdminPlayer } from 'src/services/player-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
