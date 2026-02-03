@@ -187,11 +187,11 @@ export function BalancePopover({ sx, ...other }: BoxProps) {
         open={!!openPopover}
         anchorEl={openPopover}
         onClose={handleClosePopover}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
         slotProps={{
           paper: {
-            sx: { width: 400, maxHeight: 500 },
+            sx: { width: 380, maxHeight: 500, mt: 1 },
           },
         }}
       >

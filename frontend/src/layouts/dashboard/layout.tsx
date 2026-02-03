@@ -6,13 +6,11 @@ import { useBoolean } from 'minimal-shared/hooks';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
-import Breadcrumbs from '@mui/material/Breadcrumbs';
 import { useTheme } from '@mui/material/styles';
+import { varAlpha } from 'minimal-shared/utils';
 
 import { _langs, _notifications } from 'src/_mock';
-import { usePathname } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { NavMobile, NavDesktop } from './nav';
@@ -33,6 +31,8 @@ import { NotificationsPopover } from '../components/notifications-popover';
 import { BalancePopover } from '../components/balance-popover';
 import { LoyaltyProgress } from '../components/loyalty-progress';
 import { useAuth } from 'src/auth/use-auth';
+import { Iconify } from 'src/components/iconify';
+import { Logo } from 'src/components/logo';
 
 import type { MainSectionProps } from '../core/main-section';
 import type { HeaderSectionProps } from '../core/header-section';
@@ -58,10 +58,80 @@ export function DashboardLayout({
   layoutQuery = 'lg',
 }: DashboardLayoutProps) {
   const theme = useTheme();
-  const pathname = usePathname();
   const { user, openAuthDialog } = useAuth();
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
+
+  const navTopArea = (
+    <Box sx={{ px: 2.5, pb: 1.5 }}>
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Button
+          component={RouterLink}
+          href="/tournaments"
+          size="small"
+          startIcon={<Iconify icon="solar:pen-bold" width={18} />}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            color: theme.vars.palette.common.white,
+            textTransform: 'none',
+            fontWeight: 600,
+            backgroundImage: `linear-gradient(135deg, ${varAlpha(
+              theme.vars.palette.primary.mainChannel,
+              0.9
+            )} 0%, ${varAlpha(theme.vars.palette.primary.mainChannel, 0.45)} 100%)`,
+            boxShadow: `inset 0 0 0 1px ${varAlpha(
+              theme.vars.palette.primary.mainChannel,
+              0.2
+            )}`,
+            '&:hover': {
+              backgroundImage: `linear-gradient(135deg, ${varAlpha(
+                theme.vars.palette.primary.mainChannel,
+                0.95
+              )} 0%, ${varAlpha(theme.vars.palette.primary.mainChannel, 0.6)} 100%)`,
+            },
+            '& .MuiButton-startIcon': {
+              mr: 0.75,
+            },
+          }}
+        >
+          Tournaments
+        </Button>
+        <Button
+          component={RouterLink}
+          href="/wheel-spin"
+          size="small"
+          startIcon={<Iconify icon="solar:restart-bold" width={18} />}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            color: theme.vars.palette.common.white,
+            textTransform: 'none',
+            fontWeight: 600,
+            backgroundImage: `linear-gradient(135deg, ${varAlpha(
+              theme.vars.palette.secondary.mainChannel,
+              0.9
+            )} 0%, ${varAlpha(theme.vars.palette.secondary.mainChannel, 0.45)} 100%)`,
+            boxShadow: `inset 0 0 0 1px ${varAlpha(
+              theme.vars.palette.secondary.mainChannel,
+              0.2
+            )}`,
+            '&:hover': {
+              backgroundImage: `linear-gradient(135deg, ${varAlpha(
+                theme.vars.palette.secondary.mainChannel,
+                0.95
+              )} 0%, ${varAlpha(theme.vars.palette.secondary.mainChannel, 0.6)} 100%)`,
+            },
+            '& .MuiButton-startIcon': {
+              mr: 0.75,
+            },
+          }}
+        >
+          Wheel Spin
+        </Button>
+      </Box>
+    </Box>
+  );
 
   const renderHeader = () => {
     const headerSlotProps: HeaderSectionProps['slotProps'] = {
@@ -69,12 +139,6 @@ export function DashboardLayout({
         maxWidth: false,
       },
     };
-
-    const breadcrumbItems = pathname
-      .split('?')[0]
-      .split('#')[0]
-      .split('/')
-      .filter(Boolean);
 
     const headerSlots: HeaderSectionProps['slots'] = {
       topArea: (
@@ -89,43 +153,42 @@ export function DashboardLayout({
             onClick={onOpen}
             sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
           />
-          <NavMobile data={navData} open={open} onClose={onClose} workspaces={_workspaces} />
-          <Breadcrumbs
-            aria-label="breadcrumb"
+          <NavMobile
+            data={navData}
+            open={open}
+            onClose={onClose}
+            workspaces={_workspaces}
+            slots={{ topArea: navTopArea }}
+          />
+          <Box
+            component={RouterLink}
+            href="/"
             sx={{
               ml: 1,
-              color: 'text.secondary',
-              '& a': { color: 'text.secondary' },
-              '& .MuiBreadcrumbs-ol': { alignItems: 'center' },
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1,
+              textDecoration: 'none',
             }}
           >
-            <Link component={RouterLink} href="/">
-              Home
-            </Link>
-            {breadcrumbItems.map((segment, index) => {
-              const href = `/${breadcrumbItems.slice(0, index + 1).join('/')}`;
-              const label = segment
-                .replace(/-/g, ' ')
-                .replace(/\b\w/g, (char) => char.toUpperCase());
-
-              const isLast = index === breadcrumbItems.length - 1;
-
-              if (isLast) {
-                return (
-                  <Typography key={href} color="text.primary" variant="body2">
-                    {label}
-                  </Typography>
-                );
-              }
-
-              return (
-                <Link key={href} component={RouterLink} href={href}>
-                  {label}
-                </Link>
-              );
-            })}
-          </Breadcrumbs>
+            <Logo sx={{ width: 28, height: 28 }} />
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 800,
+                letterSpacing: 0.5,
+                color: theme.vars.palette.text.primary,
+              }}
+            >
+              BETSCYCLE
+            </Typography>
+          </Box>
         </>
+      ),
+      centerArea: (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {user && <BalancePopover />}
+        </Box>
       ),
       rightArea: (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.75 } }}>
@@ -134,9 +197,6 @@ export function DashboardLayout({
 
           {/** @slot Loyalty progress */}
           {user && <LoyaltyProgress />}
-
-          {/** @slot Balance popover */}
-          {user && <BalancePopover />}
 
           {/** @slot Theme mode toggle */}
           <ThemeModeToggle />
@@ -204,7 +264,12 @@ export function DashboardLayout({
        * @Sidebar
        *************************************** */
       sidebarSection={
-        <NavDesktop data={navData} layoutQuery={layoutQuery} workspaces={_workspaces} />
+        <NavDesktop
+          data={navData}
+          layoutQuery={layoutQuery}
+          workspaces={_workspaces}
+          slots={{ topArea: navTopArea }}
+        />
       }
       /** **************************************
        * @Footer
