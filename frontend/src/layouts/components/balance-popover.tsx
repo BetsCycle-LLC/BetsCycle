@@ -112,8 +112,9 @@ export function BalancePopover({ sx, ...other }: BoxProps) {
         sx={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: 1,
-          px: 0.75,
+          px: 1,
           py: 0.75,
           borderRadius: 1,
           cursor: 'pointer',
@@ -147,7 +148,7 @@ export function BalancePopover({ sx, ...other }: BoxProps) {
             />
           </Avatar>
         )}
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: 100 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: 140, ml: 0.5 }}>
           <Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1.2 }}>
             {selectedCurrency ? selectedCurrency.currencyCode : 'Balance'}
           </Typography>
@@ -173,6 +174,7 @@ export function BalancePopover({ sx, ...other }: BoxProps) {
           size="small"
           variant="contained"
           color="primary"
+          startIcon={<Iconify icon="custom:wallet-bold" width={16} />}
           sx={{ minWidth: 'auto', px: 1 }}
           onClick={(e) => {
             e.stopPropagation();

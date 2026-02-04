@@ -104,4 +104,7 @@ export default {
   'custom:moon-bold': {
     body: '<path fill="currentColor" d="M20.35 14.02a1 1 0 0 0-1.08-.2a7 7 0 0 1-9.09-9.09a1 1 0 0 0-1.28-1.28A9 9 0 1 0 20.55 15.1a1 1 0 0 0-.2-1.08"/>',
   },
+  'custom:wallet-bold': {
+    body: '<path fill="currentColor" d="M3 7a3 3 0 0 1 3-3h11a2 2 0 0 1 2 2v2h2a1 1 0 0 1 1 1v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7zm3-1h11a1 1 0 0 1 1 1v1H5V7a1 1 0 0 1 1-1zm12 6a1 1 0 0 0 0 2h2v-2h-2z"/>',
+  },
 };
