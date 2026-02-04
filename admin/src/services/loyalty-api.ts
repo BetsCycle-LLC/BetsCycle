@@ -2,6 +2,11 @@ export type TierLevel = {
   levelNumber: number;
   xp: number;
   faucetInterval: number;
+  faucetRewards?: Array<{
+    currencyId: string;
+    currencyCode?: string;
+    amount: number;
+  }>;
   weeklyRakeback: number;
   monthlyRakeback: number;
   levelUpBonus: Array<{

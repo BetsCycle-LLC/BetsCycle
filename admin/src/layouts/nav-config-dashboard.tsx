@@ -348,6 +348,12 @@ export const navData: NavItem[] = [
     path: '/admin/settings/loyalty-club',
   },
   {
+    type: 'item',
+    title: 'Free Crypto Faucet',
+    icon: <Iconify icon="solar:share-bold" />,
+    path: '/admin/settings/free-crypto-faucet',
+  },
+  {
     type: 'toggle',
     title: 'Platform Configuration',
     icon: <Iconify icon="solar:settings-bold-duotone" />,

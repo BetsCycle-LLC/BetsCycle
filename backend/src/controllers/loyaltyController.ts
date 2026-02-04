@@ -94,6 +94,10 @@ export async function getLoyaltyTiersHandler(_req: Request, res: Response) {
           levelNumber: level.levelNumber,
           xp: level.xp,
           faucetInterval: level.faucetInterval ?? 0,
+          faucetRewards: (level.faucetRewards ?? []).map((reward) => ({
+            currencyId: reward.currencyId.toString(),
+            amount: reward.amount,
+          })),
           weeklyRakeback: level.weeklyRakeback,
           monthlyRakeback: level.monthlyRakeback,
           levelUpBonus: level.levelUpBonus.map((bonus) => ({

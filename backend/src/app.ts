@@ -9,6 +9,7 @@ import { adminPlayersRouter } from './routes/admin-players';
 import { adminCurrenciesRouter } from './routes/admin-currencies';
 import { adminLoyaltyTiersRouter } from './routes/admin-loyalty-tiers';
 import { currenciesRouter } from './routes/currencies';
+import { faucetRouter } from './routes/faucet';
 import { loyaltyRouter } from './routes/loyalty';
 import { playerXPRouter } from './routes/player-xp';
 
@@ -56,6 +57,7 @@ export function createApp() {
   app.use('/api/admin/currencies', adminCurrenciesRouter);
   app.use('/api/admin/loyalty-tiers', adminLoyaltyTiersRouter);
   app.use('/api/currencies', currenciesRouter);
+  app.use('/api/faucet', faucetRouter);
   app.use('/api/loyalty', loyaltyRouter);
   app.use('/api/player/xp', playerXPRouter);
 

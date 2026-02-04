@@ -4,6 +4,10 @@ export type LoyaltyTierLevel = {
   levelNumber: number;
   xp: number;
   faucetInterval: number;
+  faucetRewards?: Array<{
+    currencyId: string;
+    amount: number;
+  }>;
   weeklyRakeback: number;
   monthlyRakeback: number;
   levelUpBonus: Array<{
