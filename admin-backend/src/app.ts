@@ -3,15 +3,10 @@ import express from 'express';
 import path from 'path';
 
 import { env } from './config/env';
-import { authRouter } from './routes/auth';
 import { adminAuthRouter } from './routes/admin-auth';
 import { adminPlayersRouter } from './routes/admin-players';
 import { adminCurrenciesRouter } from './routes/admin-currencies';
 import { adminLoyaltyTiersRouter } from './routes/admin-loyalty-tiers';
-import { currenciesRouter } from './routes/currencies';
-import { faucetRouter } from './routes/faucet';
-import { loyaltyRouter } from './routes/loyalty';
-import { playerXPRouter } from './routes/player-xp';
 
 export function createApp() {
   const app = express();
@@ -51,15 +46,10 @@ export function createApp() {
     res.json({ status: 'ok' });
   });
 
-  app.use('/api/auth', authRouter);
   app.use('/api/admin/auth', adminAuthRouter);
   app.use('/api/admin/players', adminPlayersRouter);
   app.use('/api/admin/currencies', adminCurrenciesRouter);
   app.use('/api/admin/loyalty-tiers', adminLoyaltyTiersRouter);
-  app.use('/api/currencies', currenciesRouter);
-  app.use('/api/faucet', faucetRouter);
-  app.use('/api/loyalty', loyaltyRouter);
-  app.use('/api/player/xp', playerXPRouter);
 
   app.use((req, res) => {
     res.status(404).json({ message: `Route ${req.path} not found` });
