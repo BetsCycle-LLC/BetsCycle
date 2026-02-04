@@ -17,6 +17,7 @@ export const OriginalsPage = lazy(() => import('src/pages/originals'));
 export const CasinoPage = lazy(() => import('src/pages/casino'));
 export const SportsPage = lazy(() => import('src/pages/sports'));
 export const PromotionsPage = lazy(() => import('src/pages/promotions'));
+export const FreeCryptoFaucetPage = lazy(() => import('src/pages/free-crypto-faucet'));
 export const LoyaltyClubPage = lazy(() => import('src/pages/loyalty-club'));
 export const VipPage = lazy(() => import('src/pages/vip'));
 export const WalletPage = lazy(() => import('src/pages/wallet'));
@@ -60,6 +61,7 @@ export const routesSection: RouteObject[] = [
       { path: 'casino', element: <CasinoPage /> },
       { path: 'sports', element: <SportsPage /> },
       { path: 'promotions', element: <PromotionsPage /> },
+      { path: 'free-crypto-faucet', element: <FreeCryptoFaucetPage /> },
       { path: 'loyalty-club', element: <LoyaltyClubPage /> },
       { path: 'vip', element: <VipPage /> },
       { path: 'wallet', element: <WalletPage /> },

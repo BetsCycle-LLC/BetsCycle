@@ -7,6 +7,10 @@ export type LoyaltyLevelInfo = {
   levelNumber: number;
   xp: number;
   faucetInterval: number;
+  faucetRewards: Array<{
+    currencyId: string;
+    amount: number;
+  }>;
   weeklyRakeback: number;
   monthlyRakeback: number;
   levelUpBonus: Array<{
@@ -44,7 +48,11 @@ export async function getLoyaltyLevelByXP(xp: number): Promise<LoyaltyLevelInfo>
           order: tier.order,
           levelNumber: level.levelNumber,
           xp: level.xp,
-        faucetInterval: level.faucetInterval ?? 0,
+          faucetInterval: level.faucetInterval ?? 0,
+          faucetRewards: (level.faucetRewards ?? []).map((reward) => ({
+            currencyId: reward.currencyId.toString(),
+            amount: reward.amount,
+          })),
           weeklyRakeback: level.weeklyRakeback,
           monthlyRakeback: level.monthlyRakeback,
           levelUpBonus: level.levelUpBonus.map((bonus) => ({
@@ -97,7 +105,11 @@ export async function getNextLoyaltyLevel(
             order: tier.order,
             levelNumber: level.levelNumber,
             xp: level.xp,
-          faucetInterval: level.faucetInterval ?? 0,
+            faucetInterval: level.faucetInterval ?? 0,
+            faucetRewards: (level.faucetRewards ?? []).map((reward) => ({
+              currencyId: reward.currencyId.toString(),
+              amount: reward.amount,
+            })),
             weeklyRakeback: level.weeklyRakeback,
             monthlyRakeback: level.monthlyRakeback,
             levelUpBonus: level.levelUpBonus.map((bonus) => ({

@@ -53,6 +53,10 @@ type TierForm = {
     faucetInterval: string;
     weeklyRakeback: string;
     monthlyRakeback: string;
+    faucetRewards: Array<{
+      currencyId: string;
+      amount: string;
+    }>;
     levelUpBonus: Array<{
       currencyId: string;
       amount: string;
@@ -123,6 +127,10 @@ export function LoyaltyClubManagementView() {
       faucetInterval: '0',
       weeklyRakeback: '0',
       monthlyRakeback: '0',
+      faucetRewards: currencies.map((currency) => ({
+        currencyId: currency.id,
+        amount: '0',
+      })),
       levelUpBonus: currencies.map((currency) => ({
         currencyId: currency.id,
         amount: '0',
@@ -140,9 +148,14 @@ export function LoyaltyClubManagementView() {
 
     const levels = tier.levels.map((level) => {
       const bonusMap = new Map(level.levelUpBonus.map((b) => [b.currencyId, b.amount]));
+      const rewardMap = new Map((level.faucetRewards ?? []).map((reward) => [reward.currencyId, reward.amount]));
       const allBonuses = currencies.map((currency) => ({
         currencyId: currency.id,
         amount: String(bonusMap.get(currency.id) ?? 0),
+      }));
+      const allRewards = currencies.map((currency) => ({
+        currencyId: currency.id,
+        amount: String(rewardMap.get(currency.id) ?? 0),
       }));
 
       return {
@@ -151,6 +164,7 @@ export function LoyaltyClubManagementView() {
         faucetInterval: String(level.faucetInterval ?? 0),
         weeklyRakeback: String(level.weeklyRakeback),
         monthlyRakeback: String(level.monthlyRakeback),
+        faucetRewards: allRewards,
         levelUpBonus: allBonuses,
       };
     });
@@ -204,6 +218,10 @@ export function LoyaltyClubManagementView() {
           faucetInterval: '0',
           weeklyRakeback: '0',
           monthlyRakeback: '0',
+          faucetRewards: currencies.map((currency) => ({
+            currencyId: currency.id,
+            amount: '0',
+          })),
           levelUpBonus: currencies.map((currency) => ({
             currencyId: currency.id,
             amount: '0',
@@ -278,6 +296,10 @@ export function LoyaltyClubManagementView() {
       faucetInterval: parseNumberField(level.faucetInterval, 'Faucet interval'),
       weeklyRakeback: parseNumberField(level.weeklyRakeback, 'Weekly rakeback'),
       monthlyRakeback: parseNumberField(level.monthlyRakeback, 'Monthly rakeback'),
+      faucetRewards: level.faucetRewards.map((reward) => ({
+        currencyId: reward.currencyId,
+        amount: parseNumberField(reward.amount, 'Faucet reward amount'),
+      })),
       levelUpBonus: level.levelUpBonus
         .map((bonus) => ({
           currencyId: bonus.currencyId,

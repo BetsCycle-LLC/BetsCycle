@@ -152,7 +152,7 @@ export const navData: NavItem[] = [
       {
         type: 'item',
         title: 'Free Crypto Faucet',
-        path: '/promotions',
+        path: '/free-crypto-faucet',
         icon: <Iconify icon="mingcute:add-line" />,
       },
       {
